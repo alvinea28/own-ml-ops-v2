@@ -1,0 +1,4 @@
+# Normalize only personal additions; preserve every upstream file unchanged.
+/.gitattributes text eol=lf
+/docs/** text eol=lf
+/.opencode/memory/graph.json text eol=lf

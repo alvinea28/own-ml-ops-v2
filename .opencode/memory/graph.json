@@ -1,0 +1,111 @@
+{
+  "version": 1,
+  "generatedAt": "2026-09-19T11:45:59Z",
+  "root": ".",
+  "nodes": [
+    {
+      "id": "README.md",
+      "kind": "document",
+      "summary": "Upstream accelerator overview, prerequisites, and documentation entry points."
+    },
+    {
+      "id": "LICENSE",
+      "kind": "license",
+      "summary": "Original Microsoft MIT license retained in the personal copy."
+    },
+    {
+      "id": ".gitattributes",
+      "kind": "configuration",
+      "summary": "Normalizes only personal additions to LF while preserving all original upstream files."
+    },
+    {
+      "id": "documentation/structure/README.md",
+      "kind": "document",
+      "summary": "Defines the three-repository project factory and inner/outer ML loops."
+    },
+    {
+      "id": "documentation/architecture/README.md",
+      "kind": "document",
+      "summary": "Indexes classical ML, computer vision, and NLP architecture patterns."
+    },
+    {
+      "id": "documentation/architecture/classical.md",
+      "kind": "document",
+      "summary": "Describes the baseline tabular ML development, deployment, and monitoring lifecycle."
+    },
+    {
+      "id": "documentation/architecture/vision.md",
+      "kind": "document",
+      "summary": "Adapts the baseline lifecycle for image annotation and supervised computer vision."
+    },
+    {
+      "id": "documentation/architecture/nlp.md",
+      "kind": "document",
+      "summary": "Adapts the baseline lifecycle for text processing and human-reviewed NLP updates."
+    },
+    {
+      "id": "documentation/deployguides/deployguide_gha.md",
+      "kind": "document",
+      "summary": "Documents GitHub project generation, OIDC configuration, and later Azure deployment."
+    },
+    {
+      "id": "documentation/deployguides/deployguide_ado.md",
+      "kind": "document",
+      "summary": "Documents Azure DevOps repository initialization and ML deployment orchestration."
+    },
+    {
+      "id": "sparse_checkout.sh",
+      "kind": "script",
+      "summary": "Mutating standalone project generator that resets generated Git history and creates/pushes a new repository."
+    },
+    {
+      "id": ".azuredevops/initialise-project.yml",
+      "kind": "pipeline",
+      "summary": "Manual Azure DevOps pipeline that checks out project inputs and invokes two initialization scripts."
+    },
+    {
+      "id": ".azuredevops/scripts/initialise_repo.sh",
+      "kind": "script",
+      "summary": "Validates template inputs, replaces a target working tree, commits, and pushes generated project files."
+    },
+    {
+      "id": ".azuredevops/scripts/create_ado_pipelines.sh",
+      "kind": "script",
+      "summary": "Creates Azure DevOps folders and ML/infrastructure pipelines with first-run execution skipped."
+    },
+    {
+      "id": "docs/UPSTREAM-STUDY.md",
+      "kind": "document",
+      "summary": "Records personal ownership, exact source provenance, inspected behavior, and clone-only scope."
+    },
+    {
+      "id": "docs/daily work report/2026-09-19.md",
+      "kind": "document",
+      "summary": "Records the personal-copy session, document URLs, validation results, and deferred deployment decisions."
+    }
+  ],
+  "edges": [
+    { "from": "README.md", "to": "LICENSE", "rel": "licensed-by" },
+    { "from": "README.md", "to": "documentation/structure/README.md", "rel": "links-to" },
+    { "from": "README.md", "to": "documentation/architecture/README.md", "rel": "links-to" },
+    { "from": "documentation/structure/README.md", "to": "sparse_checkout.sh", "rel": "documents" },
+    { "from": "documentation/architecture/README.md", "to": "documentation/architecture/classical.md", "rel": "links-to" },
+    { "from": "documentation/architecture/README.md", "to": "documentation/architecture/vision.md", "rel": "links-to" },
+    { "from": "documentation/architecture/README.md", "to": "documentation/architecture/nlp.md", "rel": "links-to" },
+    { "from": "documentation/architecture/vision.md", "to": "documentation/architecture/classical.md", "rel": "adapts" },
+    { "from": "documentation/architecture/nlp.md", "to": "documentation/architecture/classical.md", "rel": "adapts" },
+    { "from": "documentation/deployguides/deployguide_gha.md", "to": "sparse_checkout.sh", "rel": "documents" },
+    { "from": "documentation/deployguides/deployguide_ado.md", "to": ".azuredevops/initialise-project.yml", "rel": "documents" },
+    { "from": ".azuredevops/initialise-project.yml", "to": ".azuredevops/scripts/initialise_repo.sh", "rel": "invokes" },
+    { "from": ".azuredevops/initialise-project.yml", "to": ".azuredevops/scripts/create_ado_pipelines.sh", "rel": "invokes" },
+    { "from": "docs/UPSTREAM-STUDY.md", "to": "README.md", "rel": "summarizes" },
+    { "from": "docs/UPSTREAM-STUDY.md", "to": ".gitattributes", "rel": "documents" },
+    { "from": "docs/UPSTREAM-STUDY.md", "to": "sparse_checkout.sh", "rel": "reviews" },
+    { "from": "docs/daily work report/2026-09-19.md", "to": "docs/UPSTREAM-STUDY.md", "rel": "reports" }
+  ],
+  "hotspots": [
+    "sparse_checkout.sh",
+    ".azuredevops/scripts/initialise_repo.sh",
+    ".azuredevops/scripts/create_ado_pipelines.sh"
+  ]
+}
