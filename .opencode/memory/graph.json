@@ -1,12 +1,12 @@
 {
   "version": 1,
-  "generatedAt": "2026-09-19T11:45:59Z",
+  "generatedAt": "2026-09-20T06:29:14Z",
   "root": ".",
   "nodes": [
     {
       "id": "README.md",
       "kind": "document",
-      "summary": "Upstream accelerator overview, prerequisites, and documentation entry points."
+      "summary": "Accelerator overview with a prominent link to the personal repaired taxi-template workflow."
     },
     {
       "id": "LICENSE",
@@ -16,7 +16,7 @@
     {
       "id": ".gitattributes",
       "kind": "configuration",
-      "summary": "Normalizes only personal additions to LF while preserving all original upstream files."
+      "summary": "Normalizes personal additions and changed initializer files to LF."
     },
     {
       "id": "documentation/structure/README.md",
@@ -61,17 +61,27 @@
     {
       "id": ".azuredevops/initialise-project.yml",
       "kind": "pipeline",
-      "summary": "Manual Azure DevOps pipeline that checks out project inputs and invokes two initialization scripts."
+      "summary": "Routes the taxi scenario to the standalone imported repository and other scenarios to the upstream template."
     },
     {
       "id": ".azuredevops/scripts/initialise_repo.sh",
       "kind": "script",
-      "summary": "Validates template inputs, replaces a target working tree, commits, and pushes generated project files."
+      "summary": "Generates only into a fresh full-history target while preserving source files and supporting both template layouts."
     },
     {
       "id": ".azuredevops/scripts/create_ado_pipelines.sh",
       "kind": "script",
-      "summary": "Creates Azure DevOps folders and ML/infrastructure pipelines with first-run execution skipped."
+      "summary": "Registers top-level pipeline YAML files only, preserves failures, and skips first-run execution."
+    },
+    {
+      "id": ".azuredevops/tests/initialise-project.test.cjs",
+      "kind": "test",
+      "summary": "Exercises safe standalone generation, upstream fallback, shallow-history rejection, and mocked pipeline creation."
+    },
+    {
+      "id": "docs/TAXI-TEMPLATE.md",
+      "kind": "document",
+      "summary": "Explains private GitHub template import, exact taxi defaults, safety boundaries, validation, and rollout prerequisites."
     },
     {
       "id": "docs/UPSTREAM-STUDY.md",
@@ -82,9 +92,15 @@
       "id": "docs/daily work report/2026-09-19.md",
       "kind": "document",
       "summary": "Records the personal-copy session, document URLs, validation results, and deferred deployment decisions."
+    },
+    {
+      "id": "docs/daily work report/2026-09-20.md",
+      "kind": "document",
+      "summary": "Records standalone taxi integration, safety regression results, source preservation, and remaining Azure Repos setup."
     }
   ],
   "edges": [
+    { "from": "README.md", "to": "docs/TAXI-TEMPLATE.md", "rel": "links-to" },
     { "from": "README.md", "to": "LICENSE", "rel": "licensed-by" },
     { "from": "README.md", "to": "documentation/structure/README.md", "rel": "links-to" },
     { "from": "README.md", "to": "documentation/architecture/README.md", "rel": "links-to" },
@@ -96,12 +112,16 @@
     { "from": "documentation/architecture/nlp.md", "to": "documentation/architecture/classical.md", "rel": "adapts" },
     { "from": "documentation/deployguides/deployguide_gha.md", "to": "sparse_checkout.sh", "rel": "documents" },
     { "from": "documentation/deployguides/deployguide_ado.md", "to": ".azuredevops/initialise-project.yml", "rel": "documents" },
+    { "from": "docs/TAXI-TEMPLATE.md", "to": ".azuredevops/initialise-project.yml", "rel": "documents" },
+    { "from": ".azuredevops/tests/initialise-project.test.cjs", "to": ".azuredevops/scripts/initialise_repo.sh", "rel": "tests" },
+    { "from": ".azuredevops/tests/initialise-project.test.cjs", "to": ".azuredevops/scripts/create_ado_pipelines.sh", "rel": "tests" },
     { "from": ".azuredevops/initialise-project.yml", "to": ".azuredevops/scripts/initialise_repo.sh", "rel": "invokes" },
     { "from": ".azuredevops/initialise-project.yml", "to": ".azuredevops/scripts/create_ado_pipelines.sh", "rel": "invokes" },
     { "from": "docs/UPSTREAM-STUDY.md", "to": "README.md", "rel": "summarizes" },
     { "from": "docs/UPSTREAM-STUDY.md", "to": ".gitattributes", "rel": "documents" },
     { "from": "docs/UPSTREAM-STUDY.md", "to": "sparse_checkout.sh", "rel": "reviews" },
-    { "from": "docs/daily work report/2026-09-19.md", "to": "docs/UPSTREAM-STUDY.md", "rel": "reports" }
+    { "from": "docs/daily work report/2026-09-19.md", "to": "docs/UPSTREAM-STUDY.md", "rel": "reports" },
+    { "from": "docs/daily work report/2026-09-20.md", "to": "docs/TAXI-TEMPLATE.md", "rel": "reports" }
   ],
   "hotspots": [
     "sparse_checkout.sh",

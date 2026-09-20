@@ -11,18 +11,20 @@ parameters:
     displayName: New Project Repository Name
     type: string
 
-  #- name: mlOpsProjectTemplateAdoProjectName
-  #  displayName: MLOps Project Template's ADO project name
-  #  type: string
-  #  # default: [good idea to put your default here]
+  - name: useRepairedTaxiTemplate
+    displayName: Use repaired taxi template for classical / AML CLI v2 / Bicep
+    type: boolean
+    default: true
 
-  - name: mlopsRepoName
-    displayName: MLOps-V2 ADO Repository name
+  # Import https://github.com/alvinea28/taxi-fare-regression into Azure Repos
+  # under this DISTINCT name. Never use the working application as the source/target.
+  - name: taxiTemplateRepoName
+    displayName: Repaired taxi template Azure Repos name
     type: string
-    default: mlops-v2
+    default: taxi-fare-regression-template
 
   - name: mlOpsProjectRepoName
-    displayName: MLOps Project Template's repo
+    displayName: Upstream template Azure Repos name (other scenarios)
     type: string
     default: mlops-project-template
 
@@ -52,6 +54,14 @@ parameters:
       - bicep
       - terraform
 
+variables:
+  ${{ if and(eq(parameters.useRepairedTaxiTemplate, true), eq(parameters.projectType, 'classical'), eq(parameters.mlopsVersion, 'aml-cli-v2'), eq(parameters.infrastructure_version, 'bicep')) }}:
+    templateRepoName: ${{ parameters.taxiTemplateRepoName }}
+    templateLayout: standalone
+  ${{ else }}:
+    templateRepoName: ${{ parameters.mlOpsProjectRepoName }}
+    templateLayout: accelerator
+
 stages:
   - stage: InitialiseProject
     displayName: Initialise Project
@@ -62,30 +72,45 @@ stages:
           vmImage: ubuntu-latest
         steps:
           - checkout: self
+            path: s/accelerator
             persistCredentials: false
-          #- checkout: git://${{ parameters.mlOpsProjectTemplateAdoProjectName }}/${{ parameters.mlOpsProjectRepoName }}
-          #  persistCredentials: false
-          - checkout: git://${{ parameters.adoProjectName }}/${{ parameters.mlOpsProjectRepoName }}
+          - checkout: git://${{ parameters.adoProjectName }}/${{ variables.templateRepoName }}@refs/heads/main
+            path: s/project-template
             persistCredentials: false
           - checkout: git://${{ parameters.adoProjectName }}/${{ parameters.repoName }}
+            path: s/target
+            fetchDepth: 0
             persistCredentials: true
 
           - task: Bash@3
             displayName: Run script to initialise your repo
             inputs:
-              targetType: "filePath"
-              filePath: ${{ parameters.mlopsRepoName }}/.azuredevops/scripts/initialise_repo.sh
-              arguments: >
-                ${{ parameters.repoName }} ${{ parameters.projectType }} ${{ parameters.mlopsVersion }} ${{ parameters.mlOpsProjectRepoName }} ${{ parameters.infrastructure_version}}
-
+              targetType: inline
+              workingDirectory: $(Pipeline.Workspace)/s
+              script: |
+                bash "$ACCELERATOR_ROOT/.azuredevops/scripts/initialise_repo.sh" \
+                  "$TARGET_DIRECTORY" "$PROJECT_TYPE" "$MLOPS_VERSION" \
+                  "$TEMPLATE_DIRECTORY" "$INFRASTRUCTURE_VERSION" "$TEMPLATE_LAYOUT"
+            env:
+              ACCELERATOR_ROOT: $(Pipeline.Workspace)/s/accelerator
+              TARGET_DIRECTORY: $(Pipeline.Workspace)/s/target
+              TEMPLATE_DIRECTORY: $(Pipeline.Workspace)/s/project-template
+              PROJECT_TYPE: ${{ parameters.projectType }}
+              MLOPS_VERSION: ${{ parameters.mlopsVersion }}
+              INFRASTRUCTURE_VERSION: ${{ parameters.infrastructure_version }}
+              TEMPLATE_LAYOUT: ${{ variables.templateLayout }}
 
           - task: Bash@3
             displayName: Run script to create pipelines in ADO
             inputs:
-              targetType: "filePath"
-              filePath: ${{ parameters.mlopsRepoName }}/.azuredevops/scripts/create_ado_pipelines.sh
-              arguments: >
-                ${{ parameters.repoName }} ${{ parameters.adoProjectName }}
-
+              targetType: inline
+              workingDirectory: $(Pipeline.Workspace)/s
+              script: |
+                bash "$ACCELERATOR_ROOT/.azuredevops/scripts/create_ado_pipelines.sh" \
+                  "$TARGET_REPOSITORY" "$ADO_PROJECT" "$TARGET_DIRECTORY"
             env:
+              ACCELERATOR_ROOT: $(Pipeline.Workspace)/s/accelerator
+              TARGET_DIRECTORY: $(Pipeline.Workspace)/s/target
+              TARGET_REPOSITORY: ${{ parameters.repoName }}
+              ADO_PROJECT: ${{ parameters.adoProjectName }}
               AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)

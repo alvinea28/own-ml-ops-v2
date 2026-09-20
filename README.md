@@ -1,5 +1,11 @@
 # Azure MLOps (v2) Solution Accelerator
 
+> **Personal taxi template:** This copy's `dev` branch initializes classical / AML
+> CLI v2 / Bicep projects from
+> [alvinea28/taxi-fare-regression](https://github.com/alvinea28/taxi-fare-regression),
+> the repaired standalone project. Start with [the updated import and initialization
+> guide](docs/TAXI-TEMPLATE.md), not the upstream taxi-template defaults below.
+
 ![Header](media/mlopsheader.jpg)
 
 Welcome to the MLOps (v2) solution accelerator repository! This project is intended to serve as the starting point for MLOps implementation in Azure.
