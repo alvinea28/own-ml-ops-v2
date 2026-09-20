@@ -1,7 +1,7 @@
 # Normalize personal additions and the initializer files changed by this fork.
 /.gitattributes text eol=lf
 /docs/** text eol=lf
-/.opencode/memory/graph.json text eol=lf
+/.github/copilot-instructions.md text eol=lf
 /.azuredevops/initialise-project.yml text eol=lf
 /.azuredevops/scripts/initialise_repo.sh text eol=lf
 /.azuredevops/scripts/create_ado_pipelines.sh text eol=lf

@@ -138,3 +138,6 @@ terraform.tfstate.backup
 .terraform.tfstate.lock.info
 .terraform
 terraform.tfvars
+
+# OpenCode artifacts are intentionally excluded from this repository.
+.opencode/
