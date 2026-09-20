@@ -3,6 +3,7 @@
 /docs/** text eol=lf
 /.github/copilot-instructions.md text eol=lf
 /.azuredevops/initialise-project.yml text eol=lf
+/.azuredevops/initialise-project-advanced.yml text eol=lf
 /.azuredevops/scripts/initialise_repo.sh text eol=lf
 /.azuredevops/scripts/create_ado_pipelines.sh text eol=lf
 /.azuredevops/tests/** text eol=lf

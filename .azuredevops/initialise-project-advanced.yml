@@ -1,6 +1,7 @@
+# Optional upstream generator. Use initialise-project.yml for the repaired taxi.
 trigger: none
 
-name: Initialize taxi project ${{ parameters.repoName }}
+name: Initialize upstream project ${{ parameters.repoName }}
 
 parameters:
   - name: adoProjectName
@@ -8,19 +9,43 @@ parameters:
     type: string
 
   - name: repoName
-    displayName: New taxi project repository (must already exist)
+    displayName: New project repository (must already exist)
     type: string
 
-  # Import https://github.com/alvinea28/taxi-fare-regression into Azure Repos
-  # under this DISTINCT name. Never use the working application as the source/target.
-  - name: taxiTemplateRepoName
-    displayName: Source template repository (already imported)
+  - name: mlOpsProjectRepoName
+    displayName: Upstream source template repository (already imported)
     type: string
-    default: taxi-fare-regression-template
+    default: mlops-project-template
+
+  - name: projectType
+    displayName: Upstream ML project type
+    type: string
+    default: classical
+    values:
+      - classical
+      - cv
+      - nlp
+
+  - name: mlopsVersion
+    displayName: Upstream MLOps interface
+    type: string
+    default: aml-cli-v2
+    values:
+      - aml-cli-v2
+      - python-sdk-v2
+      - rai-aml-cli-v2
+
+  - name: infrastructure_version
+    displayName: Upstream infrastructure provider
+    type: string
+    default: bicep
+    values:
+      - bicep
+      - terraform
 
 stages:
   - stage: InitialiseProject
-    displayName: Initialise Project
+    displayName: Initialise upstream project
     jobs:
       - job: InitialiseProjectJob
         displayName: Checkout repos, initialise your new one and create pipelines
@@ -30,7 +55,7 @@ stages:
           - checkout: self
             path: s/accelerator
             persistCredentials: false
-          - checkout: git://${{ parameters.adoProjectName }}/${{ parameters.taxiTemplateRepoName }}@refs/heads/main
+          - checkout: git://${{ parameters.adoProjectName }}/${{ parameters.mlOpsProjectRepoName }}@refs/heads/main
             path: s/project-template
             persistCredentials: false
           - checkout: git://${{ parameters.adoProjectName }}/${{ parameters.repoName }}
@@ -51,10 +76,10 @@ stages:
               ACCELERATOR_ROOT: $(Pipeline.Workspace)/s/accelerator
               TARGET_DIRECTORY: $(Pipeline.Workspace)/s/target
               TEMPLATE_DIRECTORY: $(Pipeline.Workspace)/s/project-template
-              PROJECT_TYPE: classical
-              MLOPS_VERSION: aml-cli-v2
-              INFRASTRUCTURE_VERSION: bicep
-              TEMPLATE_LAYOUT: standalone
+              PROJECT_TYPE: ${{ parameters.projectType }}
+              MLOPS_VERSION: ${{ parameters.mlopsVersion }}
+              INFRASTRUCTURE_VERSION: ${{ parameters.infrastructure_version }}
+              TEMPLATE_LAYOUT: accelerator
 
           - task: Bash@3
             displayName: Run script to create pipelines in ADO

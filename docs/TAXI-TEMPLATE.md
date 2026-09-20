@@ -31,8 +31,8 @@ Only these two personal GitHub copies were created for this workflow:
 The remaining `Azure/...` URLs below are real upstream dependencies, **not** copies
 in the personal GitHub account. `Azure/mlops-templates` is still required by the
 generated training and deployment pipelines. `Azure/mlops-project-template` is
-only needed for other scenario selections or the upstream opt-out; the standalone
-taxi template replaces it for classical / AML CLI v2 / Bicep.
+only used by the separate advanced initializer; the normal taxi initializer
+never checks it out or asks for its name.
 
 Copying a dependency into a personal GitHub account would change its source URL,
 but would not remove the Azure Repos import step: this initializer currently uses
@@ -49,7 +49,7 @@ anonymously clone a private GitHub repository or require credentials in YAML.
 | [own-ml-ops-v2](https://github.com/alvinea28/own-ml-ops-v2) | `own-ml-ops-v2` (or an existing accelerator name) | **`main`** | Updated initialization pipeline and scripts |
 | [taxi-fare-regression](https://github.com/alvinea28/taxi-fare-regression) | **`taxi-fare-regression-template`** | `main` | Repaired standalone taxi source |
 | [Azure/mlops-templates](https://github.com/Azure/mlops-templates) | `mlops-templates` | `main` | Shared Azure ML CLI pipeline helpers |
-| [Azure/mlops-project-template](https://github.com/Azure/mlops-project-template) | `mlops-project-template` | `main` | Only needed for other scenarios or the upstream opt-out |
+| [Azure/mlops-project-template](https://github.com/Azure/mlops-project-template) | `mlops-project-template` | `main` | Optional: only for the separate advanced initializer |
 
 Repository visibility is controlled separately on GitHub. Grant readers access to
 private repositories, including the taxi template, and authenticate their import
@@ -75,14 +75,27 @@ Use the distinct template name above even if your existing application is named
    synchronize/import this updated `main`, then manually select `main` in the
    pipeline's branch selector. Changing the GitHub default does not update an
    existing Azure Repos import or a saved pipeline's branch automatically.
-4. Set the Azure DevOps project and new target repository names. Keep these values:
-   - `useRepairedTaxiTemplate`: `true`
-   - `taxiTemplateRepoName`: `taxi-fare-regression-template`
-   - `projectType`: `classical`
-   - `mlopsVersion`: `aml-cli-v2`
-   - `infrastructure_version`: `bicep`
+4. Fill in only the three relevant inputs:
+
+   | Run dialog input | Meaning | Example |
+   | --- | --- | --- |
+   | **Azure DevOps project containing the repositories** (`adoProjectName`) | Azure DevOps project, not an organization or GitHub repository | `fixed-mlops-v2` |
+   | **New taxi project repository (must already exist)** (`repoName`) | New empty destination repository | `taxi-fare-regression-demo` |
+   | **Source template repository (already imported)** (`taxiTemplateRepoName`) | Azure Repos source holding the repaired taxi code | `taxi-fare-regression-template` |
+
+   **Classical ML + AML CLI v2 + Bicep are automatic.** There is no enable/disable
+   checkbox, upstream-template field, or workload/interface/provider selector in
+   this taxi-only form. The built-in **Pipeline version** selector should stay on
+   **main**; it selects the accelerator code version, not an Azure environment.
 5. Authorize the checked-out repositories when Azure DevOps asks. The target's
    persisted pipeline credential is used only to push its initial generated commit.
+
+If the dialog still shows **Upstream template Azure Repos name (other scenarios)**,
+the old repaired-template checkbox, or ML type/interface/provider choices, your
+Azure Repos copy still has the older YAML. Synchronize the updated `main`, confirm
+the pipeline uses [.azuredevops/initialise-project.yml](../.azuredevops/initialise-project.yml),
+then close and reopen **Run pipeline**. A GitHub push does not update an existing
+Azure Repos import automatically.
 
 The pipeline copies the standalone root, including tests, docs, configuration,
 data, infrastructure, and hidden project configuration. It does **not** copy the
@@ -100,13 +113,19 @@ The four copied pipeline entry points are then registered with their first run
 disabled. The local `mlops/devops-pipelines/templates/` directory is a reusable
 step-template folder, not another pipeline, and is deliberately excluded.
 
-## Other variants and rollback
+## Optional advanced upstream initializer
 
-CV, NLP, Python SDK v2, Responsible AI, or Terraform selections keep using the
-original nested `mlops-project-template` layout. Setting
-`useRepairedTaxiTemplate: false` also restores that source for the taxi scenario.
-Import the upstream template repo before using those selections. These options
-retain upstream behavior; they are not covered by the taxi runtime fixes.
+The old **other scenarios** label meant computer vision (`cv`), natural language
+processing (`nlp`), Python SDK v2, Responsible AI, or Terraform. Those choices are
+irrelevant to this repaired taxi walkthrough and are not shown in its run form.
+
+If needed, create a separate pipeline using
+[.azuredevops/initialise-project-advanced.yml](../.azuredevops/initialise-project-advanced.yml).
+That pipeline uses the original nested `mlops-project-template` layout and exposes
+the upstream repository, workload, interface, and infrastructure choices. It has
+no unused taxi-template field. Import the upstream template repo before using it.
+Advanced generation retains upstream behavior and does not include the repaired
+standalone taxi code, even when its selected workload is classical ML.
 
 The taxi source is checked out from its imported `main` branch. For repeatable
 rollouts, review and control that branch's revision before running initialization.

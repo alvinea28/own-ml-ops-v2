@@ -17,7 +17,7 @@ The personal accelerator uses the following repositories. The repaired Azure Dev
 
 3. [alvinea28/taxi-fare-regression](https://github.com/alvinea28/taxi-fare-regression): the repaired standalone classical / AML CLI v2 / Bicep project. Import it into Azure Repos as `taxi-fare-regression-template`; the generated application must be a different repository.
 
-4. [Azure/mlops-project-template](https://github.com/Azure/mlops-project-template): the upstream nested template layout for other selections such as [computer vision](https://github.com/Azure/mlops-project-template/tree/main/cv), [natural language processing](https://github.com/Azure/mlops-project-template/tree/main/nlp), Python SDK, Responsible AI, Terraform, or the explicit upstream opt-out. It also remains the source for the unmodified GitHub sparse-checkout path.
+4. [Azure/mlops-project-template](https://github.com/Azure/mlops-project-template): the upstream nested layout used only by the separate [advanced initializer](../../.azuredevops/initialise-project-advanced.yml) for choices such as [computer vision](https://github.com/Azure/mlops-project-template/tree/main/cv), [natural language processing](https://github.com/Azure/mlops-project-template/tree/main/nlp), Python SDK, Responsible AI, or Terraform. The normal taxi initializer neither uses nor displays this source. It also remains the source for the unmodified GitHub sparse-checkout path.
 
 See [the personal Azure DevOps setup instructions](../../docs/TAXI-TEMPLATE.md) for the exact repository names and initializer parameters. The diagram below illustrates the original upstream architecture; the standalone taxi repository replaces its project-template input for the repaired taxi selection.
 

@@ -6,6 +6,11 @@
 > the repaired standalone project. Start with [the updated import and initialization
 > guide](docs/TAXI-TEMPLATE.md), not the upstream taxi-template defaults below.
 
+The [taxi initializer](.azuredevops/initialise-project.yml) asks only for the Azure
+DevOps project, new target repository, and imported source repository. Classical
+ML, CLI v2, and Bicep are automatic. Optional upstream scenario choices live in
+the separate [advanced initializer](.azuredevops/initialise-project-advanced.yml).
+
 ![Header](media/mlopsheader.jpg)
 
 Welcome to the MLOps (v2) solution accelerator repository! This project is intended to serve as the starting point for MLOps implementation in Azure.

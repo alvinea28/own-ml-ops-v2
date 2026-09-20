@@ -119,19 +119,79 @@ test('both shell scripts have valid Bash syntax', () => {
   for (const script of [initializer, creator]) ok(run(bash, ['--noprofile', '--norc', '-n', posix(script)]));
 });
 
-test('pipeline defaults route only the repaired taxi tuple to the imported standalone repo', () => {
+test('taxi run form exposes only the three relevant repository inputs', () => {
   const yaml = fs.readFileSync(path.join(root, '.azuredevops/initialise-project.yml'), 'utf8');
-  assert.match(yaml, /name: useRepairedTaxiTemplate[\s\S]*?type: boolean\s+default: true/);
+  const names = [...yaml.matchAll(/^  - name: (\w+)\s*$/gm)].map(match => match[1]);
+  assert.deepEqual(names, ['adoProjectName', 'repoName', 'taxiTemplateRepoName']);
   assert.match(yaml, /name: taxiTemplateRepoName[\s\S]*?default: taxi-fare-regression-template/);
-  assert.ok(yaml.includes("and(eq(parameters.useRepairedTaxiTemplate, true), eq(parameters.projectType, 'classical'), eq(parameters.mlopsVersion, 'aml-cli-v2'), eq(parameters.infrastructure_version, 'bicep'))"));
-  assert.match(yaml, /templateRepoName: \$\{\{ parameters\.taxiTemplateRepoName \}\}\s+templateLayout: standalone/);
-  assert.match(yaml, /\$\{\{ else \}\}:\s+templateRepoName: \$\{\{ parameters\.mlOpsProjectRepoName \}\}\s+templateLayout: accelerator/);
-  for (const directory of ['accelerator', 'project-template', 'target']) assert.ok(yaml.includes(`path: s/${directory}`));
-  assert.match(yaml, /path: s\/target\s+fetchDepth: 0\s+persistCredentials: true/);
-  assert.ok(yaml.includes('${{ variables.templateRepoName }}@refs/heads/main'));
-  assert.ok(yaml.includes('https://github.com/alvinea28/taxi-fare-regression'));
-  assert.doesNotMatch(yaml, /project-overrides|filePath:.*parameters\.mlopsRepoName/);
+  assert.doesNotMatch(yaml, /useRepairedTaxiTemplate|mlOpsProjectRepoName|other scenarios|parameters\.(?:projectType|mlopsVersion|infrastructure_version)/i);
 });
+
+test('taxi initializer always selects the repaired standalone CLI v2 Bicep project', () => {
+  const yaml = fs.readFileSync(path.join(root, '.azuredevops/initialise-project.yml'), 'utf8');
+  assert.ok(yaml.includes('checkout: git://${{ parameters.adoProjectName }}/${{ parameters.taxiTemplateRepoName }}@refs/heads/main'));
+  for (const [key, value] of [['PROJECT_TYPE', 'classical'], ['MLOPS_VERSION', 'aml-cli-v2'], ['INFRASTRUCTURE_VERSION', 'bicep'], ['TEMPLATE_LAYOUT', 'standalone']]) {
+    assert.match(yaml, new RegExp(`^              ${key}: ${value}\\s*$`, 'm'));
+  }
+  assert.doesNotMatch(yaml, /\$\{\{\s*(?:if|else)\b|mlops-project-template/);
+  assert.ok(yaml.includes('https://github.com/alvinea28/taxi-fare-regression'));
+});
+
+test('advanced upstream scenarios have a separate form with no unused taxi inputs', () => {
+  const yaml = fs.readFileSync(path.join(root, '.azuredevops/initialise-project-advanced.yml'), 'utf8');
+  const names = [...yaml.matchAll(/^  - name: (\w+)\s*$/gm)].map(match => match[1]);
+  assert.deepEqual(names, ['adoProjectName', 'repoName', 'mlOpsProjectRepoName', 'projectType', 'mlopsVersion', 'infrastructure_version']);
+  assert.doesNotMatch(yaml, /taxiTemplateRepoName|useRepairedTaxiTemplate/);
+  assert.ok(yaml.includes('checkout: git://${{ parameters.adoProjectName }}/${{ parameters.mlOpsProjectRepoName }}@refs/heads/main'));
+  assert.match(yaml, /^              TEMPLATE_LAYOUT: accelerator\s*$/m);
+  for (const [key, value] of [['PROJECT_TYPE', 'projectType'], ['MLOPS_VERSION', 'mlopsVersion'], ['INFRASTRUCTURE_VERSION', 'infrastructure_version']]) {
+    assert.ok(yaml.includes(`${key}: \${{ parameters.${value} }}`));
+  }
+});
+
+for (const name of ['initialise-project.yml', 'initialise-project-advanced.yml']) {
+  test(`${name}: checkout safety and environment-bound arguments are preserved`, () => {
+    const yaml = fs.readFileSync(path.join(root, '.azuredevops', name), 'utf8');
+    assert.match(yaml, /^trigger: none\s*$/m);
+    for (const directory of ['accelerator', 'project-template', 'target']) assert.ok(yaml.includes(`path: s/${directory}`));
+    assert.match(yaml, /path: s\/target\s+fetchDepth: 0\s+persistCredentials: true/);
+    assert.equal([...yaml.matchAll(/persistCredentials: false/g)].length, 2);
+    assert.equal([...yaml.matchAll(/persistCredentials: true/g)].length, 1);
+    assert.ok(yaml.includes('"$TARGET_DIRECTORY" "$PROJECT_TYPE" "$MLOPS_VERSION"'));
+    assert.ok(yaml.includes('"$TEMPLATE_DIRECTORY" "$INFRASTRUCTURE_VERSION" "$TEMPLATE_LAYOUT"'));
+    assert.ok(yaml.includes('"$TARGET_REPOSITORY" "$ADO_PROJECT" "$TARGET_DIRECTORY"'));
+    assert.doesNotMatch(yaml, /project-overrides|filePath:.*parameters\.mlopsRepoName/);
+  });
+}
+
+for (const [name, options] of [
+  ['initialise-project.yml', { standalone: true }],
+  ['initialise-project-advanced.yml', { standalone: false, project: 'cv', version: 'aml-cli-v2', infrastructure: 'terraform' }],
+]) {
+  test(`${name}: its actual YAML wrapper generates the selected project`, () => {
+    const f = fixture(options);
+    const before = fingerprint(f.source);
+    const yaml = fs.readFileSync(path.join(root, '.azuredevops', name), 'utf8');
+    const block = yaml.match(/^              script: \|\r?\n((?:                [^\r\n]*(?:\r?\n|$))+)/m);
+    assert.ok(block, 'Missing initialization task script.');
+    const script = block[1].replace(/^                /gm, '').replace(/\r\n/g, '\n');
+    const parameters = { projectType: f.project, mlopsVersion: f.version, infrastructure_version: f.infrastructure };
+    const env = { ...environment, ACCELERATOR_ROOT: posix(root), TARGET_DIRECTORY: posix(f.target), TEMPLATE_DIRECTORY: posix(f.source) };
+    for (const key of ['PROJECT_TYPE', 'MLOPS_VERSION', 'INFRASTRUCTURE_VERSION', 'TEMPLATE_LAYOUT']) {
+      const value = yaml.match(new RegExp(`^              ${key}: ([^\\r\\n]+)`, 'm'))?.[1].trim();
+      assert.ok(value, `Missing task environment value: ${key}`);
+      const parameter = value.match(/^\$\{\{ parameters\.(\w+) \}\}$/)?.[1];
+      env[key] = parameter ? parameters[parameter] : value;
+      assert.equal(typeof env[key], 'string');
+    }
+    ok(run(bash, ['--noprofile', '--norc', '-s'], { input: script, env }));
+    assert.ok(fs.existsSync(path.join(f.target, 'data-science/src/train.py')));
+    assert.ok(fs.existsSync(path.join(f.target, 'infrastructure/pipelines/deploy.yml')));
+    assert.equal(fs.existsSync(path.join(f.target, 'template-manifest.json')), options.standalone);
+    assert.deepEqual(fingerprint(f.source), before);
+    assert.equal(git(f.remote, 'rev-parse', 'refs/heads/main'), git(f.target, 'rev-parse', 'HEAD'));
+  });
+}
 
 test('standalone generation copies hidden files, fixes, docs and tests, but not source Git metadata', () => {
   const f = fixture();
