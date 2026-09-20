@@ -176,6 +176,15 @@ Use your own resource postfix, region, workload-federated Azure service connecti
 and Azure ML quotas. The copied example settings do not deploy into the original
 owner's environment.
 
+The updated template uses **Dedicated ESv3**: `Standard_E4s_v3` for infrastructure/
+training (0–4 nodes) and batch (0–5 nodes), plus one `Standard_E2s_v3` online
+instance. The combined maximum is **40 quota cores per environment**, including
+online upgrade reserve. See the [compute profile and quota budget](https://github.com/alvinea28/taxi-fare-regression/blob/main/docs/compute-quotas.md).
+Existing generated projects and imported source copies do not update automatically;
+apply the template changes deliberately rather than rerunning initialization over
+a populated repository. Quota, physical capacity, and existing cluster compatibility
+must still be checked before deployment.
+
 The working project's Azure-side state is not part of a Git snapshot: notably,
 configure a compute managed identity and registry-scoped `AcrPull` if private ACR
 image pulls require them. The copied Bicep compute module does not declare that

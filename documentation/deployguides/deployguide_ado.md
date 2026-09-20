@@ -523,20 +523,53 @@ To do this, go back to **Repos** and your ML project repo, in this example, `tax
             <img src="./images/ado-new-mlrepo.png" alt="Complete ML repo" />
    </p>
 
->**Important:**
->> Note that `config-infra-prod.yml` and `config-infra-dev.yml` files use default region as **eastus** to deploy resource group and Azure ML Workspace. If you are using Free/Trial or similar learning purpose subscriptions, you must do one of the below  -
-> 1. If you decide to use **eastus** region, ensure that your subscription(s) have a quota/limit of up to 64 vCPUs for **Standard DSv3 Family vCPUs**. The default compute cluster uses **STANDARD_D16S_V3** (16 vCPUs per node, up to 4 nodes = 64 vCPUs max). Visit Subscription page in Azure Portal as shown below to validate this.
-        ![alt text](images/susbcriptionQuota.png)
-> 2. If not, you should change it to a region where **Standard DSv3 Family vCPUs** has sufficient quota.
-> 3. You can easily change the VM SKU by editing the `aml_compute_sku` parameter in your config file:
->      * `config-infra-prod.yml` or `config-infra-dev.yml` - set `aml_compute_sku: <YOUR_SKU>` (e.g., `STANDARD_D4S_V3`)
->      * This works for both Bicep and Terraform deployments
-> 4. For ML pipeline compute (separate from infrastructure), you may need to edit:
->      * `mlops-templates/aml-cli-v2/mlops/devops-pipelines/deploy-model-training-pipeline.yml` - for ML pipeline compute
->      * `mlops-project-template/classical/aml-cli-v2/mlops/devops-pipelines/deploy-batch-endpoint-pipeline.yml`
->      * `/mlops-project-template/classical/aml-cli-v2/mlops/azureml/deploy/online/online-deployment.yml`
->
-> **Note**: The default infrastructure SKU is **STANDARD_D16S_V3** (3rd generation). ML pipelines may use different SKUs like **Standard_D4s_v5**. Adjust based on your quota and requirements.
+#### ESv3 compute sizes and quota budget
+
+The repaired taxi template uses **Standard ESv3 Family Cluster Dedicated vCPUs**,
+not the older DSv3/DSv2 examples. The environment files default to **eastus**;
+check quota in the exact subscription and region used by your service connection.
+Select the **Azure Machine Learning** quota provider, not the ordinary VM quota.
+
+| Component | VM size | vCPUs / RAM per node | Scaling / tier | Quota budget |
+| --- | --- | --- | --- | --- |
+| Bicep `cpu-cluster`, reused by training | **Standard_E4s_v3** | 4 / 32 GiB | **Dedicated**, 0–4 nodes | **16 cores** |
+| Batch `batch-cluster` | **Standard_E4s_v3** | 4 / 32 GiB | **Dedicated**, 0–5 nodes | **20 cores** |
+| Managed online deployment | **Standard_E2s_v3** | 2 / 16 GiB | 1 instance | **4 cores**, including upgrade reserve |
+| **Total per environment** | | | | **40 cores** |
+
+Bicep and training configure the **same** training cluster, so do not count it
+twice. Batch's job-level `instance_count: 2` is separate from the five-node cluster
+maximum. Dedicated and low-priority quota are different; this profile does not
+use low-priority compute.
+
+The supplied screenshot reported **96 available ESv3 Dedicated cores**. That is
+a planning snapshot, not an independently verified live quota or a guarantee of
+regional VM capacity. One environment's 40-core maximum fits that budget; dev and
+prod together would need **80 cores** when they share a subscription and region.
+Allow for other workspaces, total regional Dedicated-core limits, workspace caps,
+and overlapping deployments. Online E2s_v3 uses
+`ceil(1.2 × instance_count) × 2` quota cores, so one instance requires four.
+
+Set `aml_compute_sku: Standard_E4s_v3` in `config-infra-dev.yml` and
+`config-infra-prod.yml`. The Bicep validation/deployment pipeline and training/batch
+pipelines consume the shared configuration. Scaling variables are
+`aml_compute_min_instances: 0`, `aml_compute_max_instances: 4`, and
+`aml_batch_max_instances: 5`. The standalone manual batch definition and online
+definition remain in `mlops/azureml/deploy/batch/batch-cluster.yml` and
+`mlops/azureml/deploy/online/online-deployment.yml`; keep them aligned if overriding
+the defaults. This profile describes the repaired **Bicep** path, not the separate
+upstream Terraform/CV/NLP templates.
+
+**Existing cluster warning:** the shared compute helper skips a cluster that
+already exists. Changing these settings does not resize an old cluster or change
+its tier. Inspect the current resources first and plan any replacement explicitly;
+do not delete an active cluster or assume immutable properties can be updated.
+Keep minimum nodes at zero to allow idle training/batch scale-down. A single
+online instance is not high availability and remains allocated while deployed.
+
+See the template's [compute profile guide](https://github.com/alvinea28/taxi-fare-regression/blob/main/docs/compute-quotas.md),
+[supported online SKUs](https://learn.microsoft.com/en-us/azure/machine-learning/reference-managed-online-endpoints-vm-sku-list),
+and [Azure ML quota/reservation rules](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-manage-quotas).
 
 Making sure you are in the **main** branch, click on `config-infra-prod.yml` to open it. 
 
@@ -546,13 +579,17 @@ Under the Global section, you will see properties for `namespace`, `postfix`, an
    # Prod environment
    variables:
       # Global
-      ap_vm_image: ubuntu-20.04
+      ap_vm_image: ubuntu-22.04
 
       namespace: mlopsv2 #Note: A namespace with many characters will cause storage account creation to fail due to storage account names having a limit of 24 characters.
       postfix: 0001
       location: eastus
       environment: prod
       enable_aml_computecluster: true
+      aml_compute_sku: Standard_E4s_v3
+      aml_compute_min_instances: 0
+      aml_compute_max_instances: 4
+      aml_batch_max_instances: 5
    ```
 
 The two properties `namespace` and `postfix` will be used to construct a unique name for your Azure resource group, Azure ML workspace, and associated resources. The naming convention for your resource group will be `rg-<namespace>-<postfix>prod`. The name of the Azure ML workspace will be `mlw-<namespace>-<postfix>prod`. The `location` property will be the Azure region into which to provision these resources.
@@ -616,14 +653,19 @@ In this section you will execute an Azure DevOps pipeline that will create and r
 
 In order to create a compute instance with or without managed identity, you can leverage the `/mlops-templates/templates/python-sdk-v2/create-compute-instance.yml` located within the **mlops-templates** repository. 
 
+These are optional development compute instances, not the `cpu-cluster` used by
+the taxi training pipeline. They are not required for this walkthrough. Each
+`Standard_E4s_v3` instance adds four ESv3 cores beyond the 40-core environment
+budget above. Use the same configured region and check additional available quota.
+
 If you want to create a **compute instance without a managed identity** reference, you can add the following snippet with your own parameters to the `/mlops/devops-pipelines/deploy-model-training-pipeline.yml` pipeline definition:
 
    ``` yaml
     - template: templates/python-sdk-v2/create-compute-instance.yml@mlops-templates
       parameters:
         instance_name: compute-instance-a
-        size: Standard_D4s_v5
-        location: canadacentral
+      size: Standard_E4s_v3
+      location: ${{ variables.location }}
         description: compute instance a
    ```
 
@@ -633,8 +675,8 @@ In order to **create a system-assigned managed identity** and assign it your com
     - template: templates/python-sdk-v2/create-compute-instance.yml@mlops-templates
       parameters:
         instance_name: compute-instance-a
-        size: Standard_D4s_v5
-        location: canadacentral
+      size: Standard_E4s_v3
+      location: ${{ variables.location }}
         description: compute instance a
         identity_type: SystemAssigned
    ```
@@ -645,8 +687,8 @@ Lastly, to leverage a **user-assigned managed identity** for your compute, the f
     - template: templates/python-sdk-v2/create-compute-instance.yml@mlops-templates
       parameters:
         instance_name: compute-instance-a
-        size: Standard_D4s_v5
-        location: canadacentral
+      size: Standard_E4s_v3
+      location: ${{ variables.location }}
         description: compute instance a
         identity_type: UserAssigned
         user_assigned_identity: e12c9326-0618-4036-a0a7-ad3bb396dc97
