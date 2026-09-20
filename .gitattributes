@@ -8,4 +8,5 @@
 /.azuredevops/tests/** text eol=lf
 /documentation/deployguides/deployguide_ado.md text eol=lf
 /documentation/deployguides/deployguide_gha.md text eol=lf
+/documentation/deployguides/README.md text eol=lf
 /documentation/structure/README.md text eol=lf

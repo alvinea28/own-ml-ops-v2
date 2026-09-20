@@ -6,6 +6,39 @@ for **classical + AML CLI v2 + Bicep** by default. It is a clean snapshot of the
 working project, rather than an overlay applied to the older upstream template.
 The original working repository is not changed.
 
+Full walkthrough: [Azure DevOps guide (Markdown)](https://github.com/alvinea28/own-ml-ops-v2/blob/main/documentation/deployguides/deployguide_ado.md)
+or [Azure DevOps guide (PDF)](https://github.com/alvinea28/own-ml-ops-v2/blob/main/documentation/deployguides/deployguide_ado.pdf).
+These links select `main` explicitly; older `dev` links do not contain the latest guide and PDF.
+
+## Template source versus generated project
+
+The imported taxi repository is **not the new application you are trying to
+generate**. It is the reusable source containing the working fixes. Import that
+source once as **`taxi-fare-regression-template`**. Separately create a new empty
+Azure Repos repository, for example **`taxi-fare-regression-demo`**.
+
+The initialization YAML checks out both repositories, copies the template files
+into the empty target, commits and pushes the generated project, and creates its
+pipeline definitions. It does not create the Azure Repos repository itself: that
+empty target must exist before checkout. Never use the source template or your
+existing working application as the target.
+
+Only these two personal GitHub copies were created for this workflow:
+
+- [alvinea28/own-ml-ops-v2](https://github.com/alvinea28/own-ml-ops-v2): the initializer and documentation.
+- [alvinea28/taxi-fare-regression](https://github.com/alvinea28/taxi-fare-regression): the repaired standalone source template.
+
+The remaining `Azure/...` URLs below are real upstream dependencies, **not** copies
+in the personal GitHub account. `Azure/mlops-templates` is still required by the
+generated training and deployment pipelines. `Azure/mlops-project-template` is
+only needed for other scenario selections or the upstream opt-out; the standalone
+taxi template replaces it for classical / AML CLI v2 / Bicep.
+
+Copying a dependency into a personal GitHub account would change its source URL,
+but would not remove the Azure Repos import step: this initializer currently uses
+Azure Repos `git://` checkouts, not direct GitHub checkouts. No additional personal
+copies of the upstream companion repositories have been created.
+
 ## Import the repositories into Azure DevOps
 
 Keep the original guide's Azure Repos import model. The initializer does not
@@ -18,9 +51,10 @@ anonymously clone a private GitHub repository or require credentials in YAML.
 | [Azure/mlops-templates](https://github.com/Azure/mlops-templates) | `mlops-templates` | `main` | Shared Azure ML CLI pipeline helpers |
 | [Azure/mlops-project-template](https://github.com/Azure/mlops-project-template) | `mlops-project-template` | `main` | Only needed for other scenarios or the upstream opt-out |
 
-The first two GitHub repositories are private initially. Grant readers access and
-authenticate the import in the Azure DevOps UI. Never copy an import PAT into a
-pipeline, shell script, README, or chat. Imports are **not automatic mirrors**:
+Repository visibility is controlled separately on GitHub. Grant readers access to
+private repositories, including the taxi template, and authenticate their import
+in the Azure DevOps UI. Never copy an import PAT into a pipeline, shell script,
+README, or chat. Imports are **not automatic mirrors**:
 bring later GitHub commits into Azure Repos deliberately before generating a new
 project. Existing generated applications are not automatically overwritten.
 
