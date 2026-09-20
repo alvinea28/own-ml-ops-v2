@@ -13,6 +13,8 @@ parameters:
 
   # Import https://github.com/alvinea28/taxi-fare-regression into Azure Repos
   # under this DISTINCT name. Never use the working application as the source/target.
+  # This repository must exist in adoProjectName before queueing: Azure DevOps
+  # validates checkout references before scripts run. A default name does not create it.
   - name: taxiTemplateRepoName
     displayName: Source template repository (already imported)
     type: string

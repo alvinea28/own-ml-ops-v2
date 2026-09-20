@@ -68,7 +68,8 @@ staging=$(mktemp -d)
 trap 'rm -rf -- "$staging"' EXIT
 if [[ "$template_layout" == 'standalone' ]]; then
   for entry in "$template_repo"/*; do
-    [[ "${entry##*/}" == '.git' ]] && continue
+    # Preserve the template checkout, but do not seed source-control or retired assistant metadata.
+    case "${entry##*/}" in .git|.opencode) continue ;; esac
     cp -R -- "$entry" "$staging/"
   done
 else

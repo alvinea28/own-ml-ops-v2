@@ -55,11 +55,11 @@ function write(directory, relative, content) {
   fs.writeFileSync(file, content);
 }
 
-function fingerprint(directory, omitGit = false) {
+function fingerprint(directory, projectFilesOnly = false) {
   const entries = {};
   function visit(current, prefix = '') {
     for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
-      if (omitGit && !prefix && entry.name === '.git') continue;
+      if (projectFilesOnly && !prefix && ['.git', '.opencode'].includes(entry.name)) continue;
       const relative = prefix + entry.name;
       const file = path.join(current, entry.name);
       if (entry.isDirectory()) visit(file, relative + '/');
@@ -102,6 +102,7 @@ function fixture({ standalone = true, project = 'classical', version = 'aml-cli-
     write(source, '.gitignore', '.venv/\n');
     write(source, '.gitattributes', '* text=auto eol=lf\n');
     write(source, '.git/source-only-marker', 'Do not copy Git metadata\n');
+    write(source, '.opencode/memory/graph.json', '{"fixture":"retired metadata must not be copied"}\n');
   } else {
     write(source, `${prefix}mlops/github-actions/unused.yml`, 'name: unused\n');
     if (version === 'python-sdk-v2') write(source, `${prefix}config-aml.yml`, 'workspace: example\n');
@@ -193,13 +194,14 @@ for (const [name, options] of [
   });
 }
 
-test('standalone generation copies hidden files, fixes, docs and tests, but not source Git metadata', () => {
+test('standalone generation preserves project files without copying Git or retired assistant metadata', () => {
   const f = fixture();
   const before = fingerprint(f.source);
   ok(initialize(f));
   assert.deepEqual(fingerprint(f.source), before, 'Template must remain byte-for-byte untouched.');
   assert.deepEqual(fingerprint(f.target, true), fingerprint(f.source, true));
   assert.equal(fs.existsSync(path.join(f.target, '.git/source-only-marker')), false);
+  assert.equal(fs.existsSync(path.join(f.target, '.opencode')), false);
   assert.equal(git(f.target, 'branch', '--show-current'), 'main');
   assert.equal(git(f.target, 'status', '--porcelain'), '');
   assert.equal(git(f.remote, 'rev-parse', 'refs/heads/main'), git(f.target, 'rev-parse', 'HEAD'));
@@ -387,6 +389,7 @@ test('the real repaired taxi snapshot generates unchanged and passes its copied 
   ok(initialize(f));
   assert.deepEqual(fingerprint(f.source), before, 'Real template files and Git metadata remain untouched.');
   assert.deepEqual(fingerprint(f.target, true), fingerprint(f.source, true));
+  assert.equal(fs.existsSync(path.join(f.target, '.opencode')), false);
   ok(run(process.execPath, ['--test', 'tests/ml-pipeline-config.test.cjs'], { cwd: f.target, timeout: 180000 }));
   if (process.env.TAXI_TEST_PYTHON) {
     ok(run(process.env.TAXI_TEST_PYTHON, ['-B', '-m', 'unittest', 'discover', '-s', 'tests', '-p', 'test_*.py', '-v'], {
