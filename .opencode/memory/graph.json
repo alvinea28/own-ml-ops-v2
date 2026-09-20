@@ -1,12 +1,12 @@
 {
   "version": 1,
-  "generatedAt": "2026-09-20T06:29:14Z",
+  "generatedAt": "2026-09-20T06:59:44Z",
   "root": ".",
   "nodes": [
     {
       "id": "README.md",
       "kind": "document",
-      "summary": "Accelerator overview with a prominent link to the personal repaired taxi-template workflow."
+      "summary": "Accelerator overview identifying main as the default branch for the repaired taxi-template workflow."
     },
     {
       "id": "LICENSE",
@@ -81,12 +81,12 @@
     {
       "id": "docs/TAXI-TEMPLATE.md",
       "kind": "document",
-      "summary": "Explains private GitHub template import, exact taxi defaults, safety boundaries, validation, and rollout prerequisites."
+      "summary": "Explains importing and selecting main in Azure Repos, taxi defaults, safety boundaries, and rollout prerequisites."
     },
     {
       "id": "docs/UPSTREAM-STUDY.md",
       "kind": "document",
-      "summary": "Records personal ownership, exact source provenance, inspected behavior, and clone-only scope."
+      "summary": "Preserves the original upstream inspection and highlights the current repaired accelerator on main."
     },
     {
       "id": "docs/daily work report/2026-09-19.md",
@@ -96,7 +96,7 @@
     {
       "id": "docs/daily work report/2026-09-20.md",
       "kind": "document",
-      "summary": "Records standalone taxi integration, safety regression results, source preservation, and remaining Azure Repos setup."
+      "summary": "Records standalone taxi integration, verified safeguards, and the follow-up promotion from dev to main."
     }
   ],
   "edges": [

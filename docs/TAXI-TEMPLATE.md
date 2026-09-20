@@ -13,7 +13,7 @@ anonymously clone a private GitHub repository or require credentials in YAML.
 
 | GitHub source | Azure Repos name | Branch | Purpose |
 | --- | --- | --- | --- |
-| [own-ml-ops-v2](https://github.com/alvinea28/own-ml-ops-v2) | `own-ml-ops-v2` (or an existing accelerator name) | `dev` | Updated initialization pipeline and scripts |
+| [own-ml-ops-v2](https://github.com/alvinea28/own-ml-ops-v2) | `own-ml-ops-v2` (or an existing accelerator name) | **`main`** | Updated initialization pipeline and scripts |
 | [taxi-fare-regression](https://github.com/alvinea28/taxi-fare-regression) | **`taxi-fare-regression-template`** | `main` | Repaired standalone taxi source |
 | [Azure/mlops-templates](https://github.com/Azure/mlops-templates) | `mlops-templates` | `main` | Shared Azure ML CLI pipeline helpers |
 | [Azure/mlops-project-template](https://github.com/Azure/mlops-project-template) | `mlops-project-template` | `main` | Only needed for other scenarios or the upstream opt-out |
@@ -34,10 +34,13 @@ Use the distinct template name above even if your existing application is named
 2. Give the project Build Service read access to the source repositories and
    contribute/create-branch permissions on this **new target only**, plus the
    pipeline-creation permissions from the original deployment guide.
-3. Create or edit the initialization pipeline to use the accelerator's **dev**
+3. Create or edit the initialization pipeline to use the accelerator's **main**
    branch and [.azuredevops/initialise-project.yml](../.azuredevops/initialise-project.yml).
-   Importing the personal repo but choosing its upstream `main` branch does not
-   pick up these personal changes.
+   The personal repository's `main` branch now contains all repaired accelerator
+   code and is its GitHub default. If already imported into Azure Repos, first
+   synchronize/import this updated `main`, then manually select `main` in the
+   pipeline's branch selector. Changing the GitHub default does not update an
+   existing Azure Repos import or a saved pipeline's branch automatically.
 4. Set the Azure DevOps project and new target repository names. Keep these values:
    - `useRepairedTaxiTemplate`: `true`
    - `taxiTemplateRepoName`: `taxi-fare-regression-template`

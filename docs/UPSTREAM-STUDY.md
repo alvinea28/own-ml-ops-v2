@@ -1,6 +1,12 @@
-# Personal copy and upstream study
+# Personal copy and upstream study (historical baseline)
 
 Inspected on **2026-09-19**. Scope: inspect, clone, and publish a personal copy only; do not bootstrap an ML project or deploy Azure resources.
+
+> **Current setup (2026-09-20):** The personal repository now uses **`main`** as its
+> default and working branch, containing the repaired initializer formerly on
+> `dev`. Select **`main`** after synchronizing the Azure Repos import. See
+> [the current taxi setup guide](TAXI-TEMPLATE.md). The inspection findings below
+> describe the original 2026-09-19 baseline; `dev` is retained for history.
 
 ## Provenance and ownership
 
@@ -9,7 +15,7 @@ Inspected on **2026-09-19**. Scope: inspect, clone, and publish a personal copy 
 | Personal repository | https://github.com/alvinea28/own-ml-ops-v2 |
 | Owner | `alvinea28`, a GitHub user account, not an organization |
 | Visibility / relationship | Private, independent repository; not a GitHub fork |
-| Working and default branch | `dev` |
+| Working and default branch at the 2026-09-19 inspection | `dev` (now `main`; see update above) |
 | Upstream | https://github.com/Azure/mlops-v2 |
 | Inspected upstream branch | `main` |
 | Inspected commit | [85fe72214bf5f9c9064984c00dc818c046599215](https://github.com/Azure/mlops-v2/commit/85fe72214bf5f9c9064984c00dc818c046599215) |
@@ -20,7 +26,7 @@ All original files are retained without intentional edits. Personal additions ar
 
 The local `origin` fetch/push remote points to the personal repository. The local `upstream` fetch remote points to Azure's repository, but its push URL is disabled. `remote.pushDefault` is `origin`; the checked-out `dev` branch tracks `origin/dev`. Automatic line-ending conversion is disabled for the upstream files in this clone; the scoped attributes normalize only personal additions to LF in Git. Global Git settings and existing commit-author settings are unchanged.
 
-Only `dev` is published to the personal repository. The upstream release tags and other upstream branch refs were fetched locally, but are not mirrored to the personal remote. Issues, pull requests, release assets, repository settings, and the two companion repositories are not copied by this operation.
+At the initial inspection, only `dev` was published to the personal repository. The upstream release tags and other upstream branch refs were fetched locally, but were not mirrored to the personal remote. Issues, pull requests, release assets, repository settings, and the two companion repositories were not copied by that operation.
 
 ## What this repository actually contains
 
