@@ -191,6 +191,12 @@ image pulls require them. The copied Bicep compute module does not declare that
 identity/RBAC repair. The new repository documents this prerequisite explicitly;
 local tests do not certify a fresh Azure deployment.
 
+Before training, follow the [workspace/compute identity and registry-role checklist](../documentation/deployguides/deployguide_ado.md#before-training-managed-identities-and-container-registry-access).
+The workspace identity is already declared by Bicep, but the training cluster uses
+its own identity. `AcrPull` applies to RBAC-only registries; ABAC-enabled registries
+use the corresponding repository-reader role. Generic registry Reader access and
+image-pull data access are not interchangeable requirements.
+
 ## Offline verification
 
 Run the built-in Node test runner (Node 18+, Git and Bash required):

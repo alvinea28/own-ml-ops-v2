@@ -629,17 +629,119 @@ Now you will see the pipeline details.
    * Azure Machine Learning Workspace and associated resources including Storage Account, Container Registry, Application Insights, and Keyvault 
    * Inside the workspace, an AmlCompute cluster will be created
    
-Your Azure Machine Learning infrastructure is now deployed and you are ready to deploy an ML model training pipeline.
+After the full infrastructure deployment succeeds, complete the identity and
+registry-access checks below before running training. A lint or preflight-only
+run does not create the workspace, compute identity, or registry role assignments.
+
+### Before training: managed identities and container registry access
+
+**The workspace identity and the training compute identity are different.**
+Do not grant a role to the workspace and assume the `cpu-cluster` automatically
+uses that principal. Likewise, the `Azure-ARM-Prod` service connection identity
+is the deployment caller, not the identity used by compute nodes to pull images.
+
+| Identity | What to verify | Why it matters |
+| --- | --- | --- |
+| Azure ML workspace system-assigned identity | Workspace → Identity → System assigned is **On**; record its principal/object ID | The workspace uses this identity to access associated services. The workspace Bicep already declares `SystemAssigned`. |
+| `cpu-cluster` managed identity | Inspect the actual training cluster's identity and its own principal/object ID | This is the identity that needs permission to pull the training image. The current compute Bicep does not explicitly declare an identity or ACR role assignment. |
+| Azure DevOps service connection | The pipeline is authorized to use the intended connection | Deployment/validation permissions do not automatically grant image-pull access to the compute identity. |
+
+#### 1. Verify the workspace and compute identities
+
+1. In the Azure portal, open the deployed **Azure Machine Learning workspace →
+   Identity → System assigned**. Verify it is **On**. Bicep should already enable
+   it when the workspace is deployed; a system-assigned identity is created with
+   its resource, not as a separate user-assigned identity resource.
+2. In Azure ML Studio, open **Compute → Compute clusters → cpu-cluster** and inspect
+   its managed-identity settings. Enable a **system-assigned identity** for the
+   cluster if it has none, using the supported portal/Studio controls or
+   [the documented compute-identity update procedure](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-identity-based-service-authentication#compute-cluster).
+   Do not delete or recreate a running cluster merely to add identity access.
+3. Record the **compute principal/object ID** separately from the workspace ID.
+   If the cluster intentionally uses a user-assigned identity, grant access to the
+   identity actually selected by that compute instead of replacing it blindly.
+4. Verify the actual Azure resource after the change. The shared creation helper
+   skips a cluster that already exists; rerunning it does not repair a missing
+   identity. A system-assigned workspace identity cannot be attached to the cluster
+   as though it were a user-assigned identity.
+
+#### 2. Select the correct registry role
+
+Open the **container registry associated with this workspace**, then **Settings →
+Properties → Role assignment permissions mode**. Choose the role for that mode:
+
+| Registry mode or requirement | Role for the compute identity | Notes |
+| --- | --- | --- |
+| **RBAC Registry Permissions** | **AcrPull** | Grants image-pull access. Scope the assignment to this registry, not the entire subscription. |
+| **RBAC Registry + ABAC Repository Permissions** | **Container Registry Repository Reader** | Use the ABAC-compatible data role; legacy `AcrPull` is not honored in this mode. Add **Container Registry Repository Catalog Lister** only when the workflow must list repositories, or when reproducing the catalog-list access of `AcrPull`. |
+| A documented need to read registry configuration/control-plane metadata | **Reader**, or the narrower **Container Registry Configuration Reader and Data Access Configuration Reader** | Additional read visibility is not a blanket requirement for image pulls. In ABAC mode, generic `Reader` does not grant image-pull data access. |
+
+**Do not treat `Reader` and `Container Registry Repository Reader` as the same
+role.** There is no universal requirement to assign both `AcrPull` and a repository
+reader role: use the role appropriate to the registry mode and the operation.
+Do not switch a live registry's permission mode just to follow this guide; assess
+Azure ML image-build compatibility and existing role assignments before any migration.
+
+#### 3. Assign access on the container registry
+
+1. Open **Container Registry → Access control (IAM) → Add → Add role assignment**.
+2. Select **AcrPull** for the RBAC-only path above, or the appropriate ABAC role
+   if that is the registry's existing mode. Select **Next**.
+3. Under **Members**, choose **Managed identity**, then select the training
+   compute identity. Verify its principal/object ID matches `cpu-cluster` from
+   step 1, not just a similar display name or the workspace identity.
+4. Keep scope at the registry resource. For ABAC conditions, ensure the permitted
+   repositories cover the training image paths. Use **Review + assign**.
+5. If control-plane reader access is specifically required, add the selected
+   reader role separately at the same registry scope. Do not grant Owner,
+   Contributor, or subscription-wide access merely to fix an image pull.
+6. Confirm the assignments in **IAM → Role assignments** and allow time for RBAC
+   propagation before starting the training run. Some supported Azure ML creation
+   flows assign `AcrPull` automatically; verify rather than adding duplicates.
+
+The person assigning roles needs permission to create role assignments at that
+scope, such as **Role Based Access Control Administrator**, **User Access
+Administrator**, or **Owner**. Contributor alone does not normally grant this.
+The ACR admin account can remain disabled; do not enable shared admin credentials
+as a substitute for managed-identity access.
+
+#### 4. Final checks before clicking Run on training
+
+- The workspace and `cpu-cluster` exist, and the compute has the expected identity.
+- The **compute** principal has the correct image-pull role on the correct ACR.
+  Assigning a role only to the workspace principal does not authorize the compute.
+- Preserve the workspace's required dependency/image-build permissions. If the
+  workspace or a build identity must build/push images, read/pull-only roles are
+  not sufficient; diagnose that identity separately instead of broadening the
+  training compute's permissions.
+- Registry network/firewall/private-endpoint access also permits the compute;
+  an IAM role does not bypass network controls. Wait for role propagation.
+- Data-storage permissions are a separate requirement. Check them if training
+  uses identity-based datastores; successful image pull does not prove data access.
+- A successful infrastructure preflight is not an image-pull test. Start a new
+  training run only after these checks, then inspect its environment setup logs.
+
+Repeat the compute-identity checks for `batch-cluster` before batch inference.
+Managed online endpoints use their own endpoint identity; do not assume workspace
+or training-cluster role assignments automatically apply to online serving.
+
+References: [Azure ML service authentication and compute image pulls](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-identity-based-service-authentication#create-compute-with-managed-identity-to-access-docker-images-for-training),
+[ACR roles](https://learn.microsoft.com/en-us/azure/container-registry/container-registry-rbac-built-in-roles-overview),
+and [ABAC repository permissions](https://learn.microsoft.com/en-us/azure/container-registry/container-registry-rbac-abac-repository-permissions).
  
 ### Deploy Azure Machine Learning Model Training Pipeline
 ---
 
 The solution accelerator includes code and data for a sample end-to-end machine learning pipeline which trains a linear regression model to predict taxi fares in NYC. The pipeline is made up of multiple steps for data prep, training, model evaluation, and model registration. Sample pipelines and workflows for the Computer Vision and NLP scenarios will have different steps.  
 
+Complete [Before training: managed identities and container registry access](#before-training-managed-identities-and-container-registry-access)
+before starting this pipeline. The optional compute-instance examples below are
+not a replacement for configuring the actual `cpu-cluster` identity.
+
 In this section you will execute an Azure DevOps pipeline that will create and run an Azure Machine Learning pipeline. Together, they perform the following steps:
 
 * Connect to the Azure Machine Learning workspace created by the infrastructure deployment  
-* Create a compute cluster for training in the workspace (refer to section below to create compute instances with or without managed identity)
+* Reuse the verified `cpu-cluster` for training; the helper can create missing compute but does not replace the pre-training identity and registry-access checks
 * Register the training dataset in the workspace   
 * Prepare data for training  
 * Registers a custom python environment with the packages required for this model  
@@ -660,39 +762,42 @@ budget above. Use the same configured region and check additional available quot
 
 If you want to create a **compute instance without a managed identity** reference, you can add the following snippet with your own parameters to the `/mlops/devops-pipelines/deploy-model-training-pipeline.yml` pipeline definition:
 
-   ``` yaml
-    - template: templates/python-sdk-v2/create-compute-instance.yml@mlops-templates
-      parameters:
-        instance_name: compute-instance-a
+```yaml
+-
+   template: templates/python-sdk-v2/create-compute-instance.yml@mlops-templates
+   parameters:
+      instance_name: compute-instance-a
       size: Standard_E4s_v3
       location: ${{ variables.location }}
-        description: compute instance a
-   ```
+      description: compute instance a
+```
 
 In order to **create a system-assigned managed identity** and assign it your compute instance during creation, the above snippet can be adjusted as follows:
 
-   ``` yaml
-    - template: templates/python-sdk-v2/create-compute-instance.yml@mlops-templates
-      parameters:
-        instance_name: compute-instance-a
+```yaml
+-
+   template: templates/python-sdk-v2/create-compute-instance.yml@mlops-templates
+   parameters:
+      instance_name: compute-instance-a
       size: Standard_E4s_v3
       location: ${{ variables.location }}
-        description: compute instance a
-        identity_type: SystemAssigned
-   ```
+      description: compute instance a
+      identity_type: SystemAssigned
+```
 
 Lastly, to leverage a **user-assigned managed identity** for your compute, the following snippet can be used and adjusted as needed:
 
-   ``` yaml
-    - template: templates/python-sdk-v2/create-compute-instance.yml@mlops-templates
-      parameters:
-        instance_name: compute-instance-a
+```yaml
+-
+   template: templates/python-sdk-v2/create-compute-instance.yml@mlops-templates
+   parameters:
+      instance_name: compute-instance-a
       size: Standard_E4s_v3
       location: ${{ variables.location }}
-        description: compute instance a
-        identity_type: UserAssigned
-        user_assigned_identity: e12c9326-0618-4036-a0a7-ad3bb396dc97
-   ```
+      description: compute instance a
+      identity_type: UserAssigned
+      user_assigned_identity: e12c9326-0618-4036-a0a7-ad3bb396dc97
+```
 
 </details>
 

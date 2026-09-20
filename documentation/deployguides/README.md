@@ -5,10 +5,11 @@
 The current guides are published in [alvinea28/own-ml-ops-v2 on main](https://github.com/alvinea28/own-ml-ops-v2/tree/main). Use these links rather than an older `dev`-branch URL.
 
 * [Azure DevOps guide (Markdown)](https://github.com/alvinea28/own-ml-ops-v2/blob/main/documentation/deployguides/deployguide_ado.md)
-* [Azure DevOps guide (PDF, 34 pages)](https://github.com/alvinea28/own-ml-ops-v2/blob/main/documentation/deployguides/deployguide_ado.pdf)
+* [Azure DevOps guide (PDF, 36 pages)](https://github.com/alvinea28/own-ml-ops-v2/blob/main/documentation/deployguides/deployguide_ado.pdf)
 * [Personal taxi-template setup](https://github.com/alvinea28/own-ml-ops-v2/blob/main/docs/TAXI-TEMPLATE.md)
 * [Import the repaired taxi template: exact URL and steps](https://github.com/alvinea28/own-ml-ops-v2/blob/main/documentation/deployguides/deployguide_ado.md#import-the-taxi-regression-template)
 * [ESv3 compute sizes and quota budget](https://github.com/alvinea28/own-ml-ops-v2/blob/main/documentation/deployguides/deployguide_ado.md#esv3-compute-sizes-and-quota-budget)
+* [Before training: managed identities and ACR permissions](https://github.com/alvinea28/own-ml-ops-v2/blob/main/documentation/deployguides/deployguide_ado.md#before-training-managed-identities-and-container-registry-access)
 * [GitHub Workflows guide](https://github.com/alvinea28/own-ml-ops-v2/blob/main/documentation/deployguides/deployguide_gha.md)
 
 The PDF was added in [commit 63fec2f](https://github.com/alvinea28/own-ml-ops-v2/commit/63fec2ffa23c86ecf7493a497b97270710fc8f29) and is stored beside its Markdown source in this directory. Both guides use the personal accelerator URL; Microsoft Learn and genuine upstream dependency links remain unchanged.
