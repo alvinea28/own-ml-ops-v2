@@ -45,6 +45,50 @@ below intentionally keeps the real upstream URLs for dependencies that were not 
 
 [PDF version of this guide](deployguide_ado.pdf)
 
+## Import the taxi regression template
+
+Complete this source import **before** running the initializer. The GitHub
+repository is named `taxi-fare-regression`; its Azure Repos copy must use the
+separate source name **`taxi-fare-regression-template`**.
+
+1. Open your Azure DevOps project, for example **fixed-mlops-v2**.
+2. Select **Repos → Files**, open the repository dropdown, and select
+   **Import repository**. Create a separate source repository through this dialog;
+   do not import into your empty `taxi-fare-regression-demo` destination.
+3. Enter these values:
+
+| Import field | Value |
+| --- | --- |
+| Repository type | **Git** |
+| Clone URL | **https://github.com/alvinea28/taxi-fare-regression.git** |
+| Name / New repository name | **taxi-fare-regression-template** |
+
+4. Click **Import** and wait for the import to finish. The GitHub source is public
+   at the time of this update. If it is private when you import, authenticate with
+   an account that has read access; enter credentials only in the secure import
+   dialog, never in YAML, source files, or chat.
+5. Open **taxi-fare-regression-template**, select **main**, and confirm that
+   `template-manifest.json`, `data-science`, `mlops`, and `infrastructure` are present.
+   A repository containing only an initial README is not a completed source import.
+6. Keep this imported source repository. Separately create your empty destination
+   with **Add a README** selected on **main**, then run the normal initializer:
+
+| Initializer input | Example value |
+| --- | --- |
+| Azure DevOps project | **fixed-mlops-v2** |
+| New taxi project repository | **taxi-fare-regression-demo** |
+| Source template repository | **taxi-fare-regression-template** |
+
+If Azure DevOps asks for repository authorization, use **View/Permit** for this
+initializer. Ensure the project Build Service can read the source and contribute
+to the new destination. A recreated repository has a new identity even when its
+name is unchanged, so previous authorizations may need to be granted again.
+
+**The `-template` suffix belongs to the Azure Repos name, not the GitHub URL.**
+The initializer copies from the source into the empty destination. When retesting,
+keep the source template and use a new empty destination; do not delete the source
+or your original working taxi repository.
+
 ## Check the repositories before running initialization
 
 Typing a repository name into **Run pipeline** does not create or import it.
@@ -103,7 +147,7 @@ Below are the three repositories to import for the repaired taxi scenario. They 
 
 Only if you need the separate [advanced initializer](../../.azuredevops/initialise-project-advanced.yml) for CV, NLP, Python SDK, Responsible AI, Terraform, or original upstream templates, import https://github.com/Azure/mlops-project-template as `mlops-project-template`. Do not import it for this taxi walkthrough, and do not substitute the standalone taxi repository for the advanced initializer's nested template layout.
 
-Visibility is configured separately for each GitHub repository. The personal accelerator is public at the time of this update; the taxi template remains private and requires an account with access to import it. Authenticate private imports in the Azure DevOps UI; never store an import token in source files. Imports are one-time copies, not automatic mirrors.
+Visibility is configured separately for each GitHub repository. Both personal repositories are public at the time of this update. If a source is private when you import, authenticate in the Azure DevOps UI with an account that has read access; never store an import token in source files. Imports are one-time copies, not automatic mirrors.
 
 ---
    1. Navigate to [Azure DevOps](https://go.microsoft.com/fwlink/?LinkId=2014676&githubsi=true&clcid=0x409&WebUserId=2ecdcbf9a1ae497d934540f4edce2b7d) and the organization where you want to create the project. [Create a new organization](https://learn.microsoft.com/en-us/azure/devops/organizations/accounts/create-organization?view=azure-devops) for your project, if needed. 
@@ -133,7 +177,7 @@ Visibility is configured separately for each GitHub repository. The personal acc
          </p>
 
          At the top of the page, open the Repos drop-down and repeat the import for:
-         - https://github.com/alvinea28/taxi-fare-regression, naming its Azure Repos copy **taxi-fare-regression-template**. This is the reusable **source**, not the new application target.
+         - https://github.com/alvinea28/taxi-fare-regression.git, naming its Azure Repos copy **taxi-fare-regression-template**. Follow [Import the taxi regression template](#import-the-taxi-regression-template). This is the reusable **source**, not the new application target.
          - https://github.com/Azure/mlops-templates, naming its Azure Repos copy **mlops-templates**. This required helper repository has not been copied to the personal GitHub account.
          - Only for the separate advanced initializer: https://github.com/Azure/mlops-project-template as **mlops-project-template**. It is not needed or used by the simplified taxi initializer and has not been copied to the personal GitHub account.
 
@@ -751,9 +795,9 @@ Azure DevOps has already rejected its YAML repository reference.
 
 1. Open **Repos** in the exact project selected by `adoProjectName`. Confirm the
    repaired source repository exists there with the exact selected name and a
-   populated `main` branch. If missing, import the private
-   [repaired taxi source](https://github.com/alvinea28/taxi-fare-regression) as
-   **taxi-fare-regression-template**, authenticating with your GitHub access.
+   populated `main` branch. If missing, follow [Import the taxi regression template](#import-the-taxi-regression-template)
+   using **https://github.com/alvinea28/taxi-fare-regression.git** and the Azure Repos
+   name **taxi-fare-regression-template**. Authenticate only if the source requires it.
    Do not import it into the empty application target.
 2. Confirm the target **taxi-fare-regression-demo** already exists and is still
    empty apart from its initial README. The initializer fills this target; it

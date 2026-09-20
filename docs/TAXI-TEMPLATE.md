@@ -61,6 +61,22 @@ project. Existing generated applications are not automatically overwritten.
 Use the distinct template name above even if your existing application is named
 `taxi-fare-regression`. Do not repurpose that working application as a target.
 
+### Import the repaired taxi source
+
+In your Azure DevOps project, open **Repos → Files → repository dropdown → Import
+repository**. Set **Clone URL** to
+**https://github.com/alvinea28/taxi-fare-regression.git** and **Name / New repository
+name** to **taxi-fare-regression-template**, then click **Import**.
+
+If authentication is requested, use an account with source read access and enter
+credentials only in the import dialog. After import completes, select **main** and
+confirm `template-manifest.json`, `data-science`, `mlops`, and `infrastructure`
+exist. The `-template` suffix is the Azure Repos name, not part of the GitHub URL.
+
+See [the complete import walkthrough](../documentation/deployguides/deployguide_ado.md#import-the-taxi-regression-template).
+Keep this source when resetting demo projects; only create or recreate the separate
+empty destination, never your original working application.
+
 Before queueing, confirm **both** source and destination exist in the selected
 Azure DevOps project: the source must contain the repaired project on `main`,
 while the destination must be empty apart from its optional initial README.
