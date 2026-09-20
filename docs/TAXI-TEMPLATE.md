@@ -61,6 +61,12 @@ project. Existing generated applications are not automatically overwritten.
 Use the distinct template name above even if your existing application is named
 `taxi-fare-regression`. Do not repurpose that working application as a target.
 
+Before queueing, confirm **both** source and destination exist in the selected
+Azure DevOps project: the source must contain the repaired project on `main`,
+while the destination must be empty apart from its optional initial README.
+The `taxiTemplateRepoName` default is a name, not an automatic import operation.
+The generic upstream `mlops-project-template` does not satisfy this requirement.
+
 ## Run initialization
 
 1. Create a **new** Azure Repos application repository, for example
@@ -103,6 +109,9 @@ template's Git history. Source checkouts are never moved or deleted. Fixed check
 paths mean the accelerator's Azure Repos name can differ from its GitHub name; the
 old `mlopsRepoName` path parameter is no longer necessary.
 
+Retired assistant metadata is deliberately excluded from generated project files;
+the source itself is preserved, including any historical metadata it contains.
+
 Initialization fetches full target history and refuses shallow checkouts, dirty
 targets, targets with application files, targets with more than one existing
 commit, and overlapping source/target directories. It is a new-project generator,
@@ -112,6 +121,19 @@ configuration is used.
 The four copied pipeline entry points are then registered with their first run
 disabled. The local `mlops/devops-pipelines/templates/` directory is a reusable
 step-template folder, not another pipeline, and is deliberately excluded.
+
+## If the source repository cannot be retrieved
+
+The error happens during YAML validation, before initialization can run. Check the
+exact Azure DevOps project, source repository name, populated `main` branch,
+project Build Service read permissions, and pipeline-specific repository
+authorization. If the source is missing, import it; do not fill the new target by
+hand or point the initializer at the working application.
+
+See [the repository-access troubleshooting checklist](../documentation/deployguides/deployguide_ado.md#the-repository-taxi-fare-regression-template-could-not-be-retrieved).
+Synchronize the accelerator's current `main` into Azure Repos before retrying;
+an old imported snapshot is not updated by a GitHub push. Once generation has
+completed, do not rerun the new-project initializer over the populated target.
 
 ## Optional advanced upstream initializer
 

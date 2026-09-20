@@ -5,7 +5,7 @@
 The current guides are published in [alvinea28/own-ml-ops-v2 on main](https://github.com/alvinea28/own-ml-ops-v2/tree/main). Use these links rather than an older `dev`-branch URL.
 
 * [Azure DevOps guide (Markdown)](https://github.com/alvinea28/own-ml-ops-v2/blob/main/documentation/deployguides/deployguide_ado.md)
-* [Azure DevOps guide (PDF, 32 pages)](https://github.com/alvinea28/own-ml-ops-v2/blob/main/documentation/deployguides/deployguide_ado.pdf)
+* [Azure DevOps guide (PDF, 33 pages)](https://github.com/alvinea28/own-ml-ops-v2/blob/main/documentation/deployguides/deployguide_ado.pdf)
 * [Personal taxi-template setup](https://github.com/alvinea28/own-ml-ops-v2/blob/main/docs/TAXI-TEMPLATE.md)
 * [GitHub Workflows guide](https://github.com/alvinea28/own-ml-ops-v2/blob/main/documentation/deployguides/deployguide_gha.md)
 
@@ -21,3 +21,7 @@ The standard taxi initializer now has **three inputs only**: Azure DevOps projec
 new target repository, and imported taxi source. Optional upstream choices are
 available in a [separate advanced initializer](../../.azuredevops/initialise-project-advanced.yml),
 not as unused fields in the taxi run form.
+
+Before queueing, use the [repository existence checklist](deployguide_ado.md#check-the-repositories-before-running-initialization).
+If Azure DevOps reports that the source could not be retrieved, follow the
+[source-access troubleshooting steps](deployguide_ado.md#the-repository-taxi-fare-regression-template-could-not-be-retrieved).

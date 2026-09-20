@@ -45,6 +45,27 @@ below intentionally keeps the real upstream URLs for dependencies that were not 
 
 [PDF version of this guide](deployguide_ado.pdf)
 
+## Check the repositories before running initialization
+
+Typing a repository name into **Run pipeline** does not create or import it.
+In the Azure DevOps project selected by `adoProjectName`, check **Repos** first:
+
+| Repository | Required state before initialization |
+| --- | --- |
+| Your accelerator repository | Latest personal accelerator `main`, including the three-input initialization YAML |
+| `taxi-fare-regression-template` | Imported repaired source on `main`, with `template-manifest.json`, `data-science`, `mlops`, and `infrastructure` present |
+| `mlops-templates` | Imported shared helpers on `main`, used by the generated deployment/training pipelines |
+| `taxi-fare-regression-demo` | A separately created, empty target; a single initial README commit on `main` is supported |
+
+The upstream `mlops-project-template` repository is **not a substitute** for
+`taxi-fare-regression-template`. Importing the generic upstream repository does
+not create the repaired source under the other name.
+
+If you imported the repaired source under a different Azure Repos name, enter
+that exact existing name as `taxiTemplateRepoName`. Keep it separate from the
+target and your original working repository. A GitHub repository existing in
+your account does not mean its Azure Repos copy exists.
+
 **Prerequisites:**
 - One or more Azure subscription(s) based on whether you are deploying Prod only or Prod and Dev environments
    - **Important:** - As mentioned in the **Prerequisites** at the beginning [here](https://github.com/alvinea28/own-ml-ops-v2#prerequisites), if you plan to use either a Free/Trial or similar learning purpose subscriptions, they might pose 'Usage + quotas' limitations in the default Azure region being used for deployment. Please read provided instructions carefully to succeessfully execute this deployment.
@@ -722,6 +743,39 @@ This directory contains the Azure DevOps pipeline definitions for deployment of 
 
 The following issues are commonly encountered on a fresh Azure DevOps organization.
 
+### "The repository taxi-fare-regression-template could not be retrieved"
+
+This is a **repository checkout/authorization error before scripts run**, not an
+Azure ML training error. The initializer cannot import a missing source after
+Azure DevOps has already rejected its YAML repository reference.
+
+1. Open **Repos** in the exact project selected by `adoProjectName`. Confirm the
+   repaired source repository exists there with the exact selected name and a
+   populated `main` branch. If missing, import the private
+   [repaired taxi source](https://github.com/alvinea28/taxi-fare-regression) as
+   **taxi-fare-regression-template**, authenticating with your GitHub access.
+   Do not import it into the empty application target.
+2. Confirm the target **taxi-fare-regression-demo** already exists and is still
+   empty apart from its initial README. The initializer fills this target; it
+   does not replace the working source project or create the repository object.
+3. In **Project settings → Repositories → Security**, give the project Build
+   Service **Read** on the accelerator and source. Give it **Read**, **Contribute**,
+   and **Create branch** on the new target only. Use the current project's scoped
+   Build Service identity; do not grant organization-wide administrator rights.
+4. Authorize the referenced source and target for **this initializer pipeline**
+   using **View/Permit** when Azure DevOps requests repository access. Pipeline
+   authorization is separate from the repository's Git permissions. Keep
+   repository-protection and project-scoped job authorization enabled; do not
+   grant every pipeline access as a workaround.
+5. Synchronize the latest accelerator `main` into Azure Repos and queue a new
+   initialization run. Changing the GitHub copy or selecting the branch named
+   `main` alone does not update an old Azure Repos import.
+
+For the intended workflow, the missing item is often the reusable source import,
+not the manually created empty destination. After successful initialization,
+expect project files in the target plus four pipeline definitions whose first
+runs are disabled. Training and Azure infrastructure deployment are separate actions.
+
 ### "No hosted parallelism has been purchased or granted"
 
 By default, new Azure DevOps organizations have **zero** parallel jobs on Microsoft-hosted agents. The infrastructure pipeline will queue indefinitely until a free grant is approved.
@@ -738,11 +792,13 @@ The user account creating the pipelines (typically the project administrator run
 
 If the `initialise-project` pipeline fails partway through and you re-run it, the second run will fail because pipelines and folders from the first attempt still exist.
 
-**Resolution:** Before retrying, delete:
-
-1. The pipelines folder in **Pipelines → Pipelines** named after your repo.
-2. The repository created in **Repos** for the project.
-3. The corresponding `infrastructure/` folder if the infra pipeline partially executed and created resources in Azure — clean these up via the Azure portal or `az group delete`.
+**Resolution:** Inspect which step failed before retrying. If the project files
+were already committed but pipeline registration failed, preserve that generated
+repository and correct/register the missing pipeline definitions separately.
+The initializer intentionally refuses to overwrite an existing application.
+For a genuinely new attempt, use a different empty target repository. Do not
+delete your working taxi repository, source template, or Azure resources to fix
+an initialization or repository-authorization error.
 
 ### "No image label found to route agent pool Azure Pipelines. Pool: Azure Pipelines, Image: ubuntu-20.04"
 
