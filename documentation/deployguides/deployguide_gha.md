@@ -1,5 +1,9 @@
 # Deployment Guide using Github Repositories Workflows
 
+> This guide clones [the personal accelerator](https://github.com/alvinea28/own-ml-ops-v2).
+> Its GitHub Actions/sparse-checkout path still uses the upstream project-template
+> layout. For the repaired standalone taxi workflow, use the [Azure DevOps guide](deployguide_ado.md).
+
 ## Technical Requirements
 
 ### Source Control and DevOps
@@ -10,7 +14,7 @@
 ### Azure Tools
 - [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli) installed locally
 - One or more Azure subscriptions (separate subscriptions recommended for Dev and Prod environments)
-   - **Important**: Free/Trial subscriptions may have quota limitations. Review the [Prerequisites](https://github.com/Azure/mlops-v2?tab=readme-ov-file#prerequisites) carefully before deployment.
+   - **Important**: Free/Trial subscriptions may have quota limitations. Review the [Prerequisites](https://github.com/alvinea28/own-ml-ops-v2#prerequisites) carefully before deployment.
 - Azure service principal with permissions to create and manage resources
 
 ### Infrastructure as Code (Optional)
@@ -61,24 +65,24 @@ If using WSL, complete all setup within the Unix environment:
 
    ![image](./images/gh-generate.png)
 
-2. **Clone the mlops-v2 repository to local system**  
-   On your local machine, select or create a root directory (ex: 'mlprojects') to hold your project repository as well as the mlops-v2 repository. Change to this directory.
+2. **Clone the own-ml-ops-v2 repository to local system**
+   On your local machine, select or create a root directory (ex: 'mlprojects') to hold your project repository as well as the own-ml-ops-v2 repository. Change to this directory.
 
-   Clone the mlops-v2 repository to this directory. This provides the documentation and the `sparse_checkout.sh` script. This repository and folder will be used to bootstrap your projects:  
-   `# git clone https://github.com/Azure/mlops-v2.git`
+   Clone the personal accelerator to this directory. This provides the documentation and the `sparse_checkout.sh` script. This repository and folder will be used to bootstrap your projects:
+   `# git clone https://github.com/alvinea28/own-ml-ops-v2.git`
 
 3. **Configure and run sparse checkout**  
-   From your local project root directory, open the `/mlops-v2/sparse_checkout.sh` for editing. Edit the following variables as needed to select the infastructure management tool used by your organization, the type of Open this file in an editor and set the following variables:
+   From your local project root directory, open the `/own-ml-ops-v2/sparse_checkout.sh` for editing. Edit the following variables as needed to select the infastructure management tool used by your organization, the type of Open this file in an editor and set the following variables:
    
    >**Note:**
    > When running the script through a  "vanilla" WSL, then you'll most likely get strange errors... In that case it might suffice to use dos2unix on the file
-   > (in WSL) run; `dos2unix sparse_checkout.sh` (in the mlops-v2 repo folder)
+   > (in WSL) run; `dos2unix sparse_checkout.sh` (in the own-ml-ops-v2 repo folder)
    
 
    * **infrastructure_version** selects the tool that will be used to deploy cloud resources.
    * **project_type** selects the AI workload type for your project (classical ml, computer vision, or nlp)
    * **mlops_version** selects your preferred interaction approach with Azure Machine Learning
-   * **git_folder_location** points to the root project directory to which you cloned mlops-v2 in step 3
+   * **git_folder_location** points to the root project directory to which you cloned own-ml-ops-v2 in step 2
    * **project_name** is the name (case sensitive) of your project. A  GitHub repository will be created with this name
    * **github_org_name** is your GitHub organization (or GitHub username)
    * **project_template_github_url** is the URL to the original or your generated clone of the mlops_project_template repository from step 1
@@ -610,4 +614,4 @@ As elements of Azure Machine Learning are still in development, the following co
 
 Interim it is recommended to schedule the deployment pipeline for development for complete model retraining on a timed trigger.
 
-For questions, please [submit an issue](https://github.com/Azure/mlops-v2/issues) or reach out to the development team at Microsoft.
+For questions about this personal copy, please [submit an issue in the own repository](https://github.com/alvinea28/own-ml-ops-v2/issues).

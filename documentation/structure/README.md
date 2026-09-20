@@ -10,20 +10,24 @@ The MLOps pattern the solution accelerator deploys is broadly organized into two
 
 ## Repositories
 
-The solution accelerator itself is comprised of three code repositories with templates that allow you to bootstrap a new machine learning project based on your choices of infrastructure management, mlops orchestration, and ML project use case:
-1.  [Azure/mlops-v2](https://github.com/Azure/mlops-v2): This repository, the deployment starting point and "project factory" for repeatable MLOps projects. This repository is cloned to allow for a local copy of documentation and customization of the project deployment script.
+The personal accelerator uses the following repositories. The repaired Azure DevOps taxi workflow needs the personal accelerator, the shared pipeline helpers, and the standalone taxi template; other scenarios additionally use the upstream nested project-template repository.
+1. [alvinea28/own-ml-ops-v2](https://github.com/alvinea28/own-ml-ops-v2): This repository, the deployment starting point and "project factory" for repeatable MLOps projects. Use its `main` branch for the repaired initializer.
 
 2. [Azure/mlops-template](https://github.com/Azure/mlops-templates): defines templates for mlops pipelines and actions such as training, model registration, deployment, etc. using either the CLI or SDK. This repository is forked into your organization to provide mlops pipelines that may be modified and reused across multiple projects or kept in sync with the parent repository as updates are made to accomodate new function in Azure Machine Learning.
 
-3. [Azure/mlops-project-template](https://github.com/Azure/mlops-project-template): defines templates for deploying infastructure based on bicep or terraform as well as project spaces appropriate to each project type ([classical-ml](https://github.com/Azure/mlops-project-template/tree/main/classical), [computer vision](https://github.com/Azure/mlops-project-template/tree/main/cv), [natural language processing](https://github.com/Azure/mlops-project-template/tree/main/nlp)). A copy of this repository is generated from a template of base infrastructure deployment patterns which can be modified for suit the requirements of your organization.
+3. [alvinea28/taxi-fare-regression](https://github.com/alvinea28/taxi-fare-regression): the repaired standalone classical / AML CLI v2 / Bicep project. Import it into Azure Repos as `taxi-fare-regression-template`; the generated application must be a different repository.
 
-A diagram of the repositories and their relationships is below:
+4. [Azure/mlops-project-template](https://github.com/Azure/mlops-project-template): the upstream nested template layout for other selections such as [computer vision](https://github.com/Azure/mlops-project-template/tree/main/cv), [natural language processing](https://github.com/Azure/mlops-project-template/tree/main/nlp), Python SDK, Responsible AI, Terraform, or the explicit upstream opt-out. It also remains the source for the unmodified GitHub sparse-checkout path.
+
+See [the personal Azure DevOps setup instructions](../../docs/TAXI-TEMPLATE.md) for the exact repository names and initializer parameters. The diagram below illustrates the original upstream architecture; the standalone taxi repository replaces its project-template input for the repaired taxi selection.
 
 ![](media/repository_arch.png)
 
 ## Defining a New ML Project
 
 A new MLOps project is bootstrapped by configuring and running the [sparse_checkout.sh](/sparse_checkout.sh) script in the main repository. 
+
+For the repaired standalone taxi project, use [the Azure DevOps initializer](../deployguides/deployguide_ado.md) instead. The sparse-checkout instructions below describe the upstream nested-template workflow, not the standalone taxi layout.
 
 Configuration options at the top of the sparse_checkout.sh script are:
 
