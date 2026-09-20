@@ -9,6 +9,41 @@ This document will guide you through using the MLOps V2 project generator to dep
 > differences from the upstream examples. Screenshots retain their original example
 > labels; use the repository names and parameters in the updated text below.
 
+## What is imported, and what does the initializer create?
+
+**The imported taxi repository is a reusable source template, not the new project.**
+The initializer populates a separate target repository with the working code and
+creates its pipeline definitions. It does not create the Azure Repos repository
+itself; create that empty target before running the initialization YAML.
+
+| Role | Azure Repos repository | How it is created |
+| --- | --- | --- |
+| **SOURCE: repaired template** | `taxi-fare-regression-template` | Import [alvinea28/taxi-fare-regression](https://github.com/alvinea28/taxi-fare-regression) from GitHub once. It contains the reusable working fixes. |
+| **TARGET: your new project** | For example, `taxi-fare-regression-demo` | Create a new empty Azure Repos repository. The initializer copies the source files into it, commits them, and pushes them. Do not import the taxi template into this target. |
+
+Run the initializer with `taxiTemplateRepoName: taxi-fare-regression-template` and
+`repoName: taxi-fare-regression-demo` (or your own new target name). Never select
+your existing working taxi project or the source template as the target.
+
+**Which repositories are actually in the personal GitHub account?** Only
+[alvinea28/own-ml-ops-v2](https://github.com/alvinea28/own-ml-ops-v2) and
+[alvinea28/taxi-fare-regression](https://github.com/alvinea28/taxi-fare-regression)
+were created for this workflow. The two upstream companion repositories have
+**not** been copied into that account:
+
+- [Azure/mlops-templates](https://github.com/Azure/mlops-templates) remains a
+   **required** shared dependency for the generated training and deployment pipelines.
+- [Azure/mlops-project-template](https://github.com/Azure/mlops-project-template)
+   is **optional for this taxi walkthrough**. It is needed for other scenario
+   selections or the upstream opt-out, not for the repaired classical / AML CLI v2 / Bicep path.
+
+Import sources **from GitHub into Azure Repos**. Even if you later create personal
+copies of the companions, the current YAML still needs Azure Repos imports because
+it uses Azure Repos `git://` checkouts, not direct GitHub checkouts. The import table
+below intentionally keeps the real upstream URLs for dependencies that were not copied.
+
+[PDF version of this guide](deployguide_ado.pdf)
+
 **Prerequisites:**
 - One or more Azure subscription(s) based on whether you are deploying Prod only or Prod and Dev environments
    - **Important:** - As mentioned in the **Prerequisites** at the beginning [here](https://github.com/alvinea28/own-ml-ops-v2#prerequisites), if you plan to use either a Free/Trial or similar learning purpose subscriptions, they might pose 'Usage + quotas' limitations in the default Azure region being used for deployment. Please read provided instructions carefully to succeessfully execute this deployment.
@@ -46,7 +81,7 @@ Below are the three repositories to import for the repaired taxi scenario. They 
 
 For CV, NLP, Python SDK, Responsible AI, Terraform, or the explicit upstream opt-out, also import https://github.com/Azure/mlops-project-template as `mlops-project-template`. Do not substitute the standalone taxi repository for that nested template layout.
 
-The two personal GitHub repositories are private. Authenticate their import in the Azure DevOps UI with an account that has access; never store an import token in source files. Imports are one-time copies, not automatic mirrors.
+Visibility is configured separately for each GitHub repository. The personal accelerator is public at the time of this update; the taxi template remains private and requires an account with access to import it. Authenticate private imports in the Azure DevOps UI; never store an import token in source files. Imports are one-time copies, not automatic mirrors.
 
 ---
    1. Navigate to [Azure DevOps](https://go.microsoft.com/fwlink/?LinkId=2014676&githubsi=true&clcid=0x409&WebUserId=2ecdcbf9a1ae497d934540f4edce2b7d) and the organization where you want to create the project. [Create a new organization](https://learn.microsoft.com/en-us/azure/devops/organizations/accounts/create-organization?view=azure-devops) for your project, if needed. 
@@ -76,9 +111,9 @@ The two personal GitHub repositories are private. Authenticate their import in t
          </p>
 
          At the top of the page, open the Repos drop-down and repeat the import for:
-         - https://github.com/alvinea28/taxi-fare-regression, naming its Azure Repos copy **taxi-fare-regression-template**.
-         - https://github.com/Azure/mlops-templates, naming its Azure Repos copy **mlops-templates**.
-         - Optionally, https://github.com/Azure/mlops-project-template as **mlops-project-template** for the other scenarios described above.
+         - https://github.com/alvinea28/taxi-fare-regression, naming its Azure Repos copy **taxi-fare-regression-template**. This is the reusable **source**, not the new application target.
+         - https://github.com/Azure/mlops-templates, naming its Azure Repos copy **mlops-templates**. This required helper repository has not been copied to the personal GitHub account.
+         - Optionally, https://github.com/Azure/mlops-project-template as **mlops-project-template** for the other scenarios described above. It has not been copied to the personal GitHub account and is not needed for the repaired taxi selection.
 
          <p align="center">
             <img src="./images/ado-import-mlops-templates.png" alt="Import mlops-templates" width="50%" height="50%"/>
@@ -124,7 +159,7 @@ In this section, you will create your ML project repository, set permissions to 
 ### Creating the project repository
 ---
 
- 1. Open the **Repos** drop-down once more and select **New repository**. Create a new repository for your ML project. In this example, the repo is named `taxi-fare-regression`. The MLOps V2 templates will be used to populate this repo based on your  choices for ML scenario, Azure ML interface, and infrastructure provider.
+ 1. Open the **Repos** drop-down once more and select **New repository**. Create the empty **target** repository for your ML project; do not import a finished project into it. The initializer will populate its files from `taxi-fare-regression-template`. The existing walkthrough and screenshots call this target `taxi-fare-regression`; use `taxi-fare-regression-demo` or another new name if that name is already your working project.
 
       Leave **Add a README** selected to initialize the repo with a `main` branch.
 
@@ -164,6 +199,11 @@ In this section, you will create your ML project repository, set permissions to 
 
 In this step, you will run an Azure DevOps pipeline, `initialise-project`, that will prompt you for the properties of the ML project you want to build including the ML scenario (classical, computer vision, or natural language processing), the interface you will use to interface with Azure ML (CLI or SDK), and the CI/CD tool and infrastructure provider your organization uses. When run, the pipeline will populate the empty repo you created in the previous steps with the correct elements of the template repos to build your project.
 
+For the repaired taxi selection, the YAML checks out the imported source and your
+already-created target, copies the working source files, commits and pushes the
+generated project, and registers its pipelines. It does not create personal GitHub
+forks, create the target repository object, or deploy Azure resources during initialization.
+
 
 3. Open the Pipelines section again and select **Create Pipeline** in the center of the page.
       <p align="center">
@@ -201,7 +241,7 @@ In this step, you will run an Azure DevOps pipeline, `initialise-project`, that 
 ---
 
    - **Azure DevOps Project Name** : This is the name of the Azure DevOps project you are running the pipeline from. In this case, `mlops-v2`.
-   - **New Project Repository Name**: The name of your new project repository created in step 1. In this example, `taxi-fare-regression`.
+   - **New Project Repository Name** (`repoName`): Your new empty **target** repository, for example **taxi-fare-regression-demo**. This must not be **taxi-fare-regression-template** or your existing working project.
    - **Use repaired taxi template for classical / AML CLI v2 / Bicep** (`useRepairedTaxiTemplate`): Leave **true** for the repaired taxi walkthrough.
    - **Repaired taxi template Azure Repos name** (`taxiTemplateRepoName`): Leave **taxi-fare-regression-template**, matching the import above.
    - **Upstream template Azure Repos name (other scenarios)** (`mlOpsProjectRepoName`): Leave **mlops-project-template**. This source is used only for other scenario selections or when the repaired taxi option is disabled; import it before choosing those paths.
@@ -218,7 +258,7 @@ In this step, you will run an Azure DevOps pipeline, `initialise-project`, that 
      - Choose **Bicep** to deploy using Azure Bicep templates
      - Choose **terraform** to use terraform based templates. 
 
-    For this repaired taxi walkthrough, select **classical**, **aml-cli-v2**, and **bicep** together. Other combinations continue to use the upstream project-template repository and do not inherit the standalone taxi fixes.
+For this repaired taxi walkthrough, select **classical**, **aml-cli-v2**, and **bicep** together. Other combinations continue to use the upstream project-template repository and do not inherit the standalone taxi fixes.
 
    
    After selecting the parameters, click **Run** at the bottom of the panel. The first run of the pipeline will prompt you to grant access to the repositories you created.
