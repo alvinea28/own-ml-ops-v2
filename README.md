@@ -1,4 +1,4 @@
-# Azure MLOps (v2) Solution Accelerator
+# Azure MLOps (v2) Solutions Accelerator
 
 > **Personal taxi template:** This copy's default `main` branch initializes classical / AML
 > CLI v2 / Bicep projects from
