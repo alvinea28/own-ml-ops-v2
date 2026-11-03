@@ -15,7 +15,7 @@ the separate [advanced initializer](.azuredevops/initialise-project-advanced.yml
 
 Welcome to the MLOps (v2) solution accelerator repository! This project is intended to serve as the starting point for MLOps implementation in Azure.
 
-MLOps is a set of all repeatable, automated, and collaborative workflows with best practices that empower teams of ML professionals to quickly and easily get their machine learning models deployed into production. You can learn more about MLOps here:
+MLOps is a set of all repeatable, automated, and collaborative workflows with best prac that empower teams of Machine learning professionals to quickly and easily get their machine learning models deployed into production. You can learn more about MLOps here:
 
 - [MLOps with Azure Machine Learning](https://azure.microsoft.com/services/machine-learning/mlops/#features)
 - [Cloud Adoption Framework Guidance](https://docs.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/ai-machine-learning-mlops)
