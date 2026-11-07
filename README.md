@@ -8,7 +8,7 @@
 
 The [taxi initializer](.azuredevops/initialise-project.yml) asks only for the Azure
 DevOps project, new target repository, and imported source repository. Classical
-ML, CLI v2, and Bicep are automatic. Optional upstream scenario choices live in
+ML, CLI v2, and Bicep are automatically options. Optional upstream scenario choices live in
 the separate [advanced initializer](.azuredevops/initialise-project-advanced.yml).
 
 ![Header](media/mlopsheader.jpg)
